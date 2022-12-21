@@ -1,0 +1,61 @@
+{
+  "nodes": {
+    "levers": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1625250560,
+        "narHash": "sha256-7s7H9RXpYfgCD5t4aPQzs2EailWPh2d2NZi0x1B/EIM=",
+        "owner": "kquick",
+        "repo": "nix-levers",
+        "rev": "488f37051df88df7af73798484a8244eb0850edf",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kquick",
+        "repo": "nix-levers",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1653936696,
+        "narHash": "sha256-M6bJShji9AIDZ7Kh7CPwPBPb/T7RiVev2PAcOi4fxDQ=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "ce6aa13369b667ac2542593170993504932eb836",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "22.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "prettyprinter-src": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-4qtbp4KL127SQzalai1E7wz/FR9QAQDpvBFrAxYHrjU=",
+        "type": "tarball",
+        "url": "https://hackage.haskell.org/package/prettyprinter-1.7.1/prettyprinter-1.7.1.tar.gz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://hackage.haskell.org/package/prettyprinter-1.7.1/prettyprinter-1.7.1.tar.gz"
+      }
+    },
+    "root": {
+      "inputs": {
+        "levers": "levers",
+        "nixpkgs": "nixpkgs",
+        "prettyprinter-src": "prettyprinter-src"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
