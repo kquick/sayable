@@ -346,6 +346,7 @@ LOUD: bar is {! "https://github.com/by/one" !} and BAZ := {! "https://github.com
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Text.Sayable
