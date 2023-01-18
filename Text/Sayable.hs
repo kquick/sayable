@@ -135,6 +135,18 @@ which starts with the '&' character:
          nothing (an empty Text Showable) if the argument is a
          'Nothing' value.
 
+  ['&<'] This is a helper operator that generates a newline between its two
+         arguments.
+
+  ['&<*'] This is a helper operator that combines the '&<' and '&*' operators: it
+          generates a newline between its two arguments and the second argument
+          is a Foldable that will be output separated by commas.
+
+  ['&<?'] This is a helper operator that conbines the '&<' and '&?' operators: if
+          the second argument is a 'Just' value, it will be output preceeded by
+          the first argument and a newline.  If the second argument is 'Nothing',
+          only the first argument is emitted (no newline either).
+
   ['&!'] This is a helper operator to apply a Prettyprinter
          transformation function (the first argument) to a 'Sayable'
          message (the second argument).
@@ -362,6 +374,9 @@ module Text.Sayable
   , (&*)
   , (&+*)
   , (&?)
+  , (&<)
+  , (&<*)
+  , (&<?)
   , (&!)
   , (&!*)
   , (&!+*)
@@ -585,7 +600,47 @@ m &? Nothing = sayable m
 m &? (Just a) = sayable m <> sayable a
 infixl 1 &?
 
--- | A helper function to use when 'OverloadedStrings' is active to
+-- | A helper operator that generates a newline between its two arguments.  Many
+-- times the '&-' operator is a better choice to allow normal prettyprinter
+-- layout capabilities, but in situations where it is known that multiple lines
+-- will or should be generated, this operator makes it easy to separate the
+-- lines.
+(&<) :: forall saytag m n . (Sayable saytag m, Sayable saytag n)
+     => m -> n -> Saying saytag
+m &< n = Saying
+         $ (saying $ sayable @saytag m)
+         <> (PP.line :: PP.Doc SayableAnn)
+         <> (saying $ sayable @saytag n)
+infixl 1 &<
+
+-- | A helper operator that combines '&<' and '&*' which will generate a newline
+-- between its two arguments, where the second argument is a foldable collection
+-- whose elements will be sayable emitted with comma separators.
+(&<*) :: forall saytag m n t . (Sayable saytag m, Sayable saytag n, Foldable t)
+      => m -> t n -> Saying saytag
+m &<* n = let addElem e (s, Saying p) =
+                (", ", Saying $ saying (sayable @saytag e) <> s <> p)
+          in Saying
+             $ (saying $ sayable @saytag m)
+             <> (PP.line :: PP.Doc SayableAnn)
+             <> (saying $ sayable @saytag
+                  (snd $ foldr addElem ("", Saying PP.emptyDoc) n))
+infixl 1 &<*
+
+-- | A helper operator that emits the first argument and optionally emits a
+-- newline and the 'Just' value of the second argument if the second argument is
+-- not 'Nothing'
+(&<?) :: forall saytag m n . (Sayable saytag m, Sayable saytag n)
+      => m -> Maybe n -> Saying saytag
+m &<? Nothing = sayable m
+m &<? (Just n) = Saying
+                 $ (saying $ sayable @saytag m)
+                 <> (PP.line :: PP.Doc SayableAnn)
+                 <> (saying $ sayable @saytag n)
+infixl 1 &<?
+
+
+-- | A helper function to use when @OverloadedStrings@ is active to
 -- identify the following quoted literal as a "Data.Text" object.
 t' :: Text -> Text
 t' = id
