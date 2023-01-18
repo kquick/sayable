@@ -544,7 +544,7 @@ infixl 2 &!
 (&*) :: forall tag m e t
         . (Sayable tag m, Sayable tag e, Foldable t) => m -> t e -> Saying tag
 m &* l = let addElem e (s, Saying p) =
-               (", ", Saying $ saying (sayable @tag e) <> s <> p)
+               ("," <> PP.softline, Saying $ saying (sayable @tag e) <> s <> p)
          in sayable m <> (snd $ foldr addElem ("", Saying PP.emptyDoc) l)
 infixl 1 &*
 
@@ -570,7 +570,8 @@ infixl 2 &+*
 (&!*) :: forall tag m t
          . (Sayable tag m, Foldable t)
       => ([PP.Doc SayableAnn] -> PP.Doc SayableAnn) -> t m -> Saying tag
-pf &!* l = let addElem e (s, p) = (", ", saying (sayable @tag e) <> s : p)
+pf &!* l = let addElem e (s, p) = ("," <> PP.softline
+                                  , saying (sayable @tag e) <> s : p)
            in Saying $ pf $ snd $ foldr addElem ("", []) l
 infixl 2 &!*
 
