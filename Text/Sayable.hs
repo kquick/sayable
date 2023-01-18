@@ -47,9 +47,9 @@ visible.]
 There are three messages printed: one on entry and one on either the success or
 failure paths.  Each message may have different levels of information reported for the various arguments.
 
-== The 'saytag' type parameter
+== The @saytag@ type parameter
 
-Each sayable message uses a 'TypeApplication' to specify a "saytag" which should
+Each sayable message uses a @TypeApplication@ to specify a "saytag" which should
 be used for controlling the rendering of that message (e.g. "info", "verbose", "error", etc.).
 
 As a developer, it is encouraged to use whatever saytag makes sense relative to the current context and type of information being processed.
@@ -81,7 +81,7 @@ instance Sayable saytag URL where
 
 The above would cause a url emitted via a "verbose" saytag to be
 expanded into a report on each individual field, whereas all other
-saytags would simply output the 'exportURL' representation of the 'URL'.
+saytags would simply output the @exportURL@ representation of the @URL@.
 
 >>> let host = Host (HTTP True) "github.com" Nothing
 >>> url' = URL (Absolute host) "by/one"
@@ -101,13 +101,13 @@ datatypes for convenience.
 == Operators
 
 In the logging lines above, there are three operators used, each of
-which starts with the '&' character:
+which starts with the @&@ character:
 
   ['&-'] This is the standard operator that takes two Sayable
          arguments and converts them to their Sayable form, then
          combining them (with an intervening space).  This is the
          standard argument to use for building the output message from
-         distict parts.
+         distinct parts.
 
   ['&+'] This is a variation of the standard '&-' operator that has no
          intervening space between the two arguments that are
@@ -129,9 +129,9 @@ which starts with the '&' character:
           'Foldable' second argument (instead of the ", " default used
           by the '&*' helper).
 
-  ['&?'] This is a helper operator whose second argument is a 'Maybe
-         a' (where 'a' is a 'Showable').  This will emit the
-         'Showable' of 'a' if the argument is a 'Just' value, or
+  ['&?'] This is a helper operator whose second argument is a @Maybe
+         a@ (where @a@ is a @Showable@).  This will emit the
+         @Showable@ of @a@ if the argument is a 'Just' value, or
          nothing (an empty Text Showable) if the argument is a
          'Nothing' value.
 
@@ -182,7 +182,7 @@ which starts with the '&' character:
     into a Prettyprinter.Pretty.
 
   * This module provides a helper function: 't'' which can be useful
-    when 'OverloadedStrings' is active to designate its argument as
+    when @OverloadedStrings@ is active to designate its argument as
     being a Text string.
 
     If the following:
@@ -196,12 +196,12 @@ saying @"error" $ "This is an error:" &- err
     can fix that:
 
 @
-__ @"error" $ t'"This is an error:" &- err
+saying @"error" $ t'"This is an error:" &- err
 @
 
   * This module provides a helper function: 'd'' which can be useful
     when creating a PP.Doc SayableAnn for inclusion into a 'Sayable'
-    by fixing the 'ann' of 'PP.Doc ann' to 'SayableAnn'.
+    by fixing the @ann@ of 'PP.Doc ann' to 'SayableAnn'.
 
     Fixes the error:
 @
@@ -236,7 +236,7 @@ __ @"error" $ t'"This is an error:" &- err
 == Unfortunate Details
 
   The use of the Sayable class to translate individual objects is
-  fairly straightforward, but the management of the phantom 'saytag'
+  fairly straightforward, but the management of the phantom @saytag@
   type parameter is a bit tricky.  As described above (with the
   Network.URL example), it's possible to provide different output
   generation by providing specialized instances for specific saytags.
@@ -295,7 +295,7 @@ LOUD: bar is {! "https://github.com/by/one" !} via {! "https://github.com/by/one
   (circa 2022).]
 
   There's another twist to this story though.  To observe this new
-  twist, add a 'Baz' datastructure and its generic 'Sayable' instance:
+  twist, add a @Baz@ datastructure and its generic 'Sayable' instance:
 
   > data Baz = Baz Foo
   > instance Sayable saytag Baz where sayable (Baz a) = t'"BAZ :=" &- foo
@@ -315,15 +315,15 @@ LOUD: bar is {! "https://github.com/by/one" !} and BAZ := "https://github.com/by
   generic 'Sayable' instance has a constraint for the inner element,
   which causes GHC to wait until the final use case to determine what
   the specific type parameters are; it sees the @"loud"@ @saytag@ value
-  and selects the @"loud"@ 'Foo' 'Sayable' instance as the most specific.
+  and selects the @"loud"@ @Foo@ 'Sayable' instance as the most specific.
   However, the @baz@ 'Sayable' instance does not have a constraint, so GHC
   takes the conservative approach and uses the most general instance,
-  which means that it transitively selects the generic 'Foo' 'Sayable'
+  which means that it transitively selects the generic @Foo@ 'Sayable'
   instance instead of the @"loud"@ instance.
 
   There are two ways to fix this:
 
-  1. Provide explicit @"loud"@ 'Sayable' instance for 'Baz'.  This is
+  1. Provide explicit @"loud"@ 'Sayable' instance for @Baz@.  This is
      problematic, because this must be done for *each* saytag for
      which there is a variation and it must be done for *each* upper
      level 'Sayable' instance.
@@ -333,9 +333,9 @@ LOUD: bar is {! "https://github.com/by/one" !} and BAZ := "https://github.com/by
      it makes no assumptions about current or future saytags and
      variations.
 
-     This 'Sayable' constraint was already present on the 'Bar'
-     'Sayable' instance because of the parameterized type for 'Bar';
-     the 'Baz' type has no type parameter, but a constraint can still
+     This 'Sayable' constraint was already present on the @Bar@
+     'Sayable' instance because of the parameterized type for @Bar@;
+     the @Baz@ type has no type parameter, but a constraint can still
      be added for each interior type:
 
 > instance Sayable saytag Foo => Sayable saytag Baz where
@@ -375,8 +375,14 @@ LOUD: bar is {! "https://github.com/by/one" !} and BAZ := {! "https://github.com
 
 module Text.Sayable
   (
+    -- * Primary Class
     Sayable(sayable)
+    -- * Result Datatype
   , Saying(Saying, saying)
+    -- * Helper operators
+    --
+    -- | These are typically used to facilitate the expression of a sayable
+    -- phrase containing multiple elements.
   , t'
   , d'
   , (&-)
@@ -393,7 +399,15 @@ module Text.Sayable
   , (&!*)
   , (&!$*)
   , (&!+*)
+    -- * Annotation used in Sayables
+    --
+    -- | Generating a 'Prettyprinter.Doc' requires the identification of an @ann@
+    -- type parameter.  For 'Sayable', this type parameter is the 'SayableAnn',
+    -- although the 'Prettyprinter.reAnnotate' function can be used to switch
+    -- from this abstract annotation to a functional annotation
+    -- (e.g. 'Prettyprinter.Render.Terminal.AnsiStyle')
   , SayableAnn(SayableAnn)
+    -- * Simple String Extraction
   , sez
   )
 where
@@ -415,7 +429,7 @@ import           Prettyprinter ( (<+>) )
 import qualified Prettyprinter as PP
 
 
--- | The main class of things that can be passed to 'say'.  Arguments
+-- | The main class of things that can be passed to 'sayable'.  Arguments
 -- provided to 'sayable' or 'sez' will be converted to the sayable form by
 -- automatically applying the appropriate instance of this class.  The
 -- default implementation is:
@@ -472,15 +486,15 @@ instance {-# OVERLAPPABLE #-} Sayable tag (PP.Doc ann) where sayable = Saying . 
 -- For example:
 --
 -- > instance Sayable saytag Foo where
--- >   sayable foo = sayable @saytag $ PP.group $ PP.pretty
+-- >   sayable foo = sayable @saytag $ Prettyprinter.group $ Prettyprinter.pretty
 -- >                 $ field1 foo &- sayable @saytag PP.line &- field2 foo
 --
--- This uses Prettyprinter's 'group' and 'line' formatters to show the
--- two fields on the same line if they will fit, otherwise stacked on
--- top of each other.  Note that the second portion needs an explicit
--- 'TypeApplication' (applied here to the 'PP.line') because the
--- 'PP.group' and 'PP.pretty' functions do not propagate that outer
--- 'saytag' to the inner portion.
+-- This uses 'Prettyprinter.group' and 'Prettyprinter.line' formatters to show
+-- the two fields on the same line if they will fit, otherwise stacked on top of
+-- each other.  Note that the second portion needs an explicit @TypeApplication@
+-- (applied here to the 'Prettyprinter.line') because the 'Prettyprinter.group'
+-- and 'Prettyprinter.pretty' functions do not propagate that outer @saytag@ to
+-- the inner portion.
 
 instance PP.Pretty (Saying tag) where pretty = PP.unAnnotate . saying
 
@@ -531,7 +545,7 @@ infixl 2 &!
 --
 -- Note: this instance makes it easy to output lists, Sequence,
 -- NonEmpty.List, etc., but it can have undesireable effects for data
--- tructures whose Foldable (Functor) is irregular... for example,
+-- structures whose Foldable (Functor) is irregular... for example,
 -- folding over a tuple only returns the 'snd' value of a tuple.
 -- Consider wrapping tuples in a newtype with an explicit Sayable to
 -- avoid this.
@@ -556,11 +570,17 @@ m &+* l = let addElem e (s, Saying p) = (Just m,
 infixl 2 &+*
 
 
--- | A helper operator that applies the first argument which converts
--- an array of 'Prettyprinter.Doc ann' elements to a single
--- 'PrettyPrinter.Doc ann' element to the second argument, which is a
--- Foldable collection of 'Sayable' items.  This is essentially a
--- combination of the '&!' and '&*' operators.
+-- | A helper operator that applies the first argument which converts an array of
+-- 'Prettyprinter.Doc ann' elements to a single 'PrettyPrinter.Doc ann' element
+-- to the second argument, which is a Foldable collection of 'Sayable' items.
+-- This is essentially a combination of the '&!' and '&*' operators where the
+-- first operation takes the list of doc items and returns a single item.
+--
+-- > import qualified Prettyprinter as PP
+-- >
+-- > putStrLn $ sez @"info" $ t'"The stooges are" &- PP.hsep &!* ["Larry", "Mo", "Curly"]
+-- The stooges are Larry Mo Curly
+--
 (&!*) :: forall tag m t
          . (Sayable tag m, Foldable t)
       => ([PP.Doc SayableAnn] -> PP.Doc SayableAnn) -> t m -> Saying tag
@@ -680,7 +700,7 @@ t' = id
 
 
 -- | A helper function to use when creating a PP.Doc SayableAnn data
--- object (i.e. fixing the 'ann' of 'Doc ann' to 'SayableAnn')
+-- object (i.e. fixing the @ann@ of 'Doc ann' to 'SayableAnn')
 d' :: PP.Pretty n => n -> PP.Doc SayableAnn
 d' = PP.pretty
 
@@ -712,7 +732,14 @@ instance KnownSymbol ann => IsLabel (ann :: Symbol) SayableAnn where
 ----------------------------------------------------------------------
 
 -- | This is a convenience function that can be used for simple conversions of a
--- Sayable to a String.
+-- Sayable to a String.  The use of this function is not generally recommended: a
+-- more controlled rendering of the resulting 'Prettyprinter.Doc' (obtained from
+-- the via 'saying') is recommended, but there are times (especially when
+-- debugging) when a quick conversion/extraction to a @String@ is convenient.
+--
+--  This function is often used with a type application:
+--
+--  > putStrLn $ sez @"info" $ "There are" &- length lst &- "list elements."
 
 sez :: forall saytag a . Sayable saytag a => a -> String
 sez = show . saying . sayable @saytag
