@@ -377,7 +377,6 @@ module Text.Sayable
   (
     Sayable(sayable)
   , Saying(Saying, saying)
-  , SayMessage(SayMessage, sayMsg)
   , t'
   , d'
   , (&-)
@@ -442,11 +441,6 @@ newtype Saying (tag :: Symbol) = Saying { saying :: PP.Doc SayableAnn }
 instance Semigroup (Saying tag) where
   Saying sm1 <> Saying sm2 = Saying $ sm1 <+> sm2
 
--- | This is the principle data type that carries 'say' messages to the output
--- conversion point.  This is generated internally by the 'saying' functions and
--- is usually not directly needed by client code.
-
-newtype SayMessage = SayMessage { sayMsg :: PP.Doc SayableAnn }
 
 -- | Inputs that are 'Sayable', i.e. that can be converted to a Saying
 
