@@ -151,6 +151,11 @@ which starts with the '&' character:
          transformation function (the first argument) to a 'Sayable'
          message (the second argument).
 
+  ['&!?'] This helper operator is a combination of the '&!' operator and the '&?'
+          operator: for a second-argument 'Just' value it will convert the value
+          to a sayable and then apply the Prettyprinter conversion operator
+          first-argument.
+
   ['&!*'] This helper operator is a combination of the '&!' operator
           and the '&*' operator: it applies the first argument (a
           @[PrettyPrinter.Doc ann] -> PrettyPrinter.Doc ann@ function)
@@ -378,6 +383,7 @@ module Text.Sayable
   , (&<*)
   , (&<?)
   , (&!)
+  , (&!?)
   , (&!*)
   , (&!+*)
   , SayableAnn(SayableAnn)
@@ -599,6 +605,15 @@ infixl 2 &!+*
 m &? Nothing = sayable m
 m &? (Just a) = sayable m <> sayable a
 infixl 1 &?
+
+-- | A helper operator allowing a Sayable item to be wrapped in a 'Maybe' and a
+-- prettyprinter conversion as the first argument.  This is a combination of the
+-- `&!` and `&?` operators.
+(&!?) :: forall tag e . (Sayable tag e)
+      => (PP.Doc SayableAnn -> PP.Doc SayableAnn) -> Maybe e -> Saying tag
+_ &!? Nothing = Saying mempty
+pf &!? (Just a) = Saying $ pf $ saying $ sayable @tag a
+infixl 1 &!?
 
 -- | A helper operator that generates a newline between its two arguments.  Many
 -- times the '&-' operator is a better choice to allow normal prettyprinter
