@@ -162,6 +162,13 @@ which starts with the '&' character:
           to the foldable collection represented by the second
           argument.
 
+  ['&!$*'] This helper operator is a combination of the '&!' operator and the
+           '&*' operator: it applies the first argument (a @PrettyPrinter.Doc ann
+           -> PrettyPrinter.Doc ann@ function) to the *result* of a foldable
+           collection represented by the second argument.  It is similar to the
+           '&!*' operator except that it applies the Prettyprinter conversion to
+           the singular result of the list rather than to the list of results.
+
   ['&!+*'] This helper operator is a combination of the '&!' operator and the
            '&+*' operator (and is a trinary rather than a binary operator): it
            applies the first argument (a @[PrettyPrinter.Doc ann] ->
@@ -385,6 +392,7 @@ module Text.Sayable
   , (&!)
   , (&!?)
   , (&!*)
+  , (&!$*)
   , (&!+*)
   , SayableAnn(SayableAnn)
   , sez
@@ -565,6 +573,20 @@ infixl 2 &+*
 pf &!* l = let addElem e (s, p) = (", ", saying (sayable @tag e) <> s : p)
            in Saying $ pf $ snd $ foldr addElem ("", []) l
 infixl 2 &!*
+
+
+-- | A helper operator that applies the first argument (a Prettyprinter
+-- adaptation function) to the result of a Foldable collection of 'Sayable'
+-- items.  This is essentially a combination of the '&!' and '&*' operators where
+-- the first operation is applied to the entire list, rather than each element of
+-- the list (as with `&!*`).
+(&!$*) :: forall tag m t
+         . (Sayable tag m, Foldable t)
+      => (PP.Doc SayableAnn -> PP.Doc SayableAnn) -> t m -> Saying tag
+pf &!$* l = let addElem e (s, p) = ("," <> PP.softline
+                                   , saying (sayable @tag e) <> s <> p)
+           in Saying $ pf $ snd $ foldr addElem ("", mempty) l
+infixl 2 &!$*
 
 
 -- | A helper operator that applies the first argument which converts
