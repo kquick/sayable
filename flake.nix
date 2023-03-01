@@ -67,7 +67,7 @@
           pkgs = import nixpkgs { inherit system; };
           haskellAdj = drv:
             with (pkgs.haskell).lib;
-            dontHaddock (dontCheck (dontBenchmark (disableLibraryProfiling (disableExecutableProfiling drv))));
+            dontHaddock (dontCheck (dontBenchmark drv));
         in rec {
           ghc = pkgs.haskell.compiler.ghc8107;
           prettyprinter = mkHaskell "prettyprinter" prettyprinter-src {
