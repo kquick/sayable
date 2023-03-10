@@ -62,7 +62,7 @@
         let
           mkHaskell = levers.mkHaskellPkg {
             inherit nixpkgs system;
-            ghcver = [ "ghc8107" ];
+            ghcver = levers.validGHCVersions pkgs.haskell.compiler;
             };
           pkgs = import nixpkgs { inherit system; };
           haskellAdj = drv:
