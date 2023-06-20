@@ -109,9 +109,15 @@ which starts with the @&@ character:
          standard argument to use for building the output message from
          distinct parts.
 
+         >>> sez @"info" $ t'"hello" &- t'"world"
+         "hello world"
+
   ['&+'] This is a variation of the standard '&-' operator that has no
          intervening space between the two arguments that are
          converted to a Sayable form.
+
+         >>> sez @"info" $ t'"hello" &+ t'"world"
+         "helloworld"
 
   ['&%'] This is a variation of the standard '&-' operator that only
          requires the second argument to be an instances of
@@ -119,15 +125,24 @@ which starts with the @&@ character:
          which can be convenient and avoids the need to define large
          numbers of 'Sayable' instances.
 
+         >>> sez @"info" $ t'"hello" &% (t'"world", t'"!")
+         "hello (world, !)"
+
   ['&*'] This is a helper operator whose second argument is a
          'Foldable' series of 'Sayable' elements.  This will fold over
          the series, adding the 'Sayable' instance value for each
          element separated by commas.
 
+         >>> sez @"info" $ t'"three:" &* [1, 2, 3::Int]
+         "three: 1, 2, 3"
+
   ['&+*'] This is similar to the '&*' helper, but it uses the first
           argument as the separator between the elements of the
           'Foldable' second argument (instead of the ", " default used
           by the '&*' helper).
+
+         >>> sez @"info" $ t'"three:" &- t'".." &+* [1, 2, 3::Int]
+         "three: 1..2..3"
 
   ['&?'] This is a helper operator whose second argument is a @Maybe
          a@ (where @a@ is a @Showable@).  This will emit the
@@ -135,32 +150,55 @@ which starts with the @&@ character:
          nothing (an empty Text Showable) if the argument is a
          'Nothing' value.
 
+         >>> sez @"info" $ t'"It's" &? Just (t'"something") &- t'"or" &? (Nothing :: Maybe Text)
+         "It's something or"
+
   ['&<'] This is a helper operator that generates a newline between its two
          arguments.
+
+         >>> sez @"info" $ t'"Hello" &< t'"world"
+         "Hello\nworld"
 
   ['&<*'] This is a helper operator that combines the '&<' and '&*' operators: it
           generates a newline between its two arguments and the second argument
           is a Foldable that will be output separated by commas.
+
+         >>> sez @"info" $ t'"three:" &<* [1, 2, 3::Int]
+         "three:\n1, 2, 3"
 
   ['&<?'] This is a helper operator that conbines the '&<' and '&?' operators: if
           the second argument is a 'Just' value, it will be output preceeded by
           the first argument and a newline.  If the second argument is 'Nothing',
           only the first argument is emitted (no newline either).
 
+         >>> sez @"info" $ t'"First" &<? Just (t'"something")
+         "First\nsomething"
+         >>> sez @"info" $ t'"Then" &<? (Nothing :: Maybe Text)
+         "Then"
+
   ['&!'] This is a helper operator to apply a Prettyprinter
          transformation function (the first argument) to a 'Sayable'
          message (the second argument).
+
+         >>> sez @"info" $ PP.group &! t'"hi"
+         "hi"
 
   ['&!?'] This helper operator is a combination of the '&!' operator and the '&?'
           operator: for a second-argument 'Just' value it will convert the value
           to a sayable and then apply the Prettyprinter conversion operator
           first-argument.
 
+         >>> sez @"info" $ PP.group &!? Just (t'"hi")
+         "hi"
+
   ['&!*'] This helper operator is a combination of the '&!' operator
           and the '&*' operator: it applies the first argument (a
           @[PrettyPrinter.Doc ann] -> PrettyPrinter.Doc ann@ function)
           to the foldable collection represented by the second
           argument.
+
+         >>> sez @"info" $ t'"three:" &- PP.align . PP.vsep &!* [1, 2, 3::Int]
+         "three: 1, \n       2, \n       3"
 
   ['&!$*'] This helper operator is a combination of the '&!' operator and the
            '&*' operator: it applies the first argument (a @PrettyPrinter.Doc ann
@@ -169,12 +207,18 @@ which starts with the @&@ character:
            '&!*' operator except that it applies the Prettyprinter conversion to
            the singular result of the list rather than to the list of results.
 
+           >>> sez @"info" $ t'"three:" &- PP.align &!$* [1, 2, 3::Int]
+           "three: 1, 2, 3"
+
   ['&!+*'] This helper operator is a combination of the '&!' operator and the
            '&+*' operator (and is a trinary rather than a binary operator): it
            applies the first argument (a @[PrettyPrinter.Doc ann] ->
            PrettyPrinter.Doc ann@ function) to the foldable collection
            represented by the third argument, using the second argument to
            specify the separators between the elements.
+
+           >>> sez @"info" $ t'"three:" &- (PP.align . PP.vsep &!+* (t'" or")) [1, 2, 3::Int]
+           "three: 1 or\n       2 or\n       3"
 
 == Convenience/other
 
@@ -204,6 +248,7 @@ saying @"error" $ t'"This is an error:" &- err
     by fixing the @ann@ of 'PP.Doc ann' to 'SayableAnn'.
 
     Fixes the error:
+
 @
     • Overlapping instances for Sayable saytag (PP.Doc ann1)
         arising from a use of ‘&-’
