@@ -1,5 +1,10 @@
 # Revision history for sayable
 
+## 1.1.1.0 -- 2023-06-20
+
+* Add Haddock documentation showing examples for operators.
+* Support GHC 9.6
+
 ## 1.1.0.0 -- 2023-01-17
 
 * Added `&<`, `&<*`, and `&<?` operators to generate a newline between expressing
