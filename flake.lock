@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1625250560,
-        "narHash": "sha256-7s7H9RXpYfgCD5t4aPQzs2EailWPh2d2NZi0x1B/EIM=",
+        "lastModified": 1685118179,
+        "narHash": "sha256-fN8DOW13BlpqaHkGeLkjNcWHo7h/aJzrA8tKT72ZS1w=",
         "owner": "kquick",
         "repo": "nix-levers",
-        "rev": "488f37051df88df7af73798484a8244eb0850edf",
+        "rev": "ce1b33cbf5a34ecebce6ca4724e3bcd11283287b",
         "type": "github"
       },
       "original": {
@@ -22,37 +22,24 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1669833724,
-        "narHash": "sha256-/HEZNyGbnQecrgJnfE8d0WC5c1xuPSD2LUpB6YXlg4c=",
+        "lastModified": 1685566663,
+        "narHash": "sha256-btHN1czJ6rzteeCuE/PNrdssqYD2nIA4w48miQAFloM=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "4d2b37a84fad1091b9de401eb450aae66f1a741e",
+        "rev": "4ecab3273592f27479a583fb6d975d4aba3486fe",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
-        "ref": "22.11",
+        "ref": "23.05",
         "repo": "nixpkgs",
         "type": "github"
-      }
-    },
-    "prettyprinter-src": {
-      "flake": false,
-      "locked": {
-        "narHash": "sha256-4qtbp4KL127SQzalai1E7wz/FR9QAQDpvBFrAxYHrjU=",
-        "type": "tarball",
-        "url": "https://hackage.haskell.org/package/prettyprinter-1.7.1/prettyprinter-1.7.1.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://hackage.haskell.org/package/prettyprinter-1.7.1/prettyprinter-1.7.1.tar.gz"
       }
     },
     "root": {
       "inputs": {
         "levers": "levers",
-        "nixpkgs": "nixpkgs",
-        "prettyprinter-src": "prettyprinter-src"
+        "nixpkgs": "nixpkgs"
       }
     }
   },

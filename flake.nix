@@ -4,18 +4,14 @@
   nixConfig.bash-prompt-suffix = "sayable.env} ";
 
   inputs = {
-    nixpkgs = { url = "github:nixos/nixpkgs/22.11"; };
+    nixpkgs = { url = "github:nixos/nixpkgs/23.05"; };
     levers = {
       url = "github:kquick/nix-levers";
       inputs.nixpkgs.follows = "nixpkgs";
       };
-    prettyprinter-src = {
-      url = "https://hackage.haskell.org/package/prettyprinter-1.7.1/prettyprinter-1.7.1.tar.gz";
-      flake = false;
-      };
     };
 
-  outputs = { self, levers, nixpkgs, prettyprinter-src }:
+  outputs = { self, levers, nixpkgs }:
     let
       shellWith = pkgs: adds: drv: drv.overrideAttrs(old:
         { buildInputs = old.buildInputs ++ adds pkgs; });
@@ -70,24 +66,12 @@
             dontHaddock (dontCheck (dontBenchmark drv));
         in rec {
           ghc = pkgs.haskell.compiler.ghc8107;
-          prettyprinter = mkHaskell "prettyprinter" prettyprinter-src {
-            adjustDrv = args:
-              drv:
-                haskellAdj drv;
-            };
-          prettyprinter_tests = mkHaskell "prettyprinter_tests" prettyprinter-src {
-            adjustDrv = args:
-              drv:
-                pkgs.haskell.lib.doBenchmark (pkgs.haskell.lib.doCheck (haskellAdj drv));
-            };
           sayable = mkHaskell "sayable" self {
-            inherit prettyprinter;
             adjustDrv = args:
               drv:
                 haskellAdj drv;
             };
           sayable_tests = mkHaskell "sayable_tests" self {
-            inherit prettyprinter;
             adjustDrv = args:
               drv:
                 pkgs.haskell.lib.doBenchmark (pkgs.haskell.lib.doCheck (haskellAdj drv));
