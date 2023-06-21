@@ -59,7 +59,7 @@
         in rec {
           ghc = pkgs.haskell.compiler.ghc8107;
           default = sayable;
-          ALL_TESTS =
+          TESTS =
             builtins.derivation
             {
             name = "all_sayable_flake_tests";
@@ -67,6 +67,15 @@
             builder = "${pkgs.bash}/bin/bash";
             args = [ "-c" "echo OK > $out" ];
             buildInputs = [ sayable_tests ];
+          };
+          DOC =
+            builtins.derivation
+            {
+            name = "all_sayable_flake_doc";
+            inherit system;
+            builder = "${pkgs.bash}/bin/bash";
+            args = [ "-c" "echo OK > $out" ];
+            buildInputs = [ sayable_doc ];
           };
           sayable = mkHaskell "sayable" self {
             adjustDrv = args:
@@ -77,6 +86,12 @@
             adjustDrv = args:
               drv:
                 pkgs.haskell.lib.doBenchmark (pkgs.haskell.lib.doCheck (haskellAdj drv));
+            };
+          sayable_doc = mkHaskell "sayable_doc" self {
+            adjustDrv = args:
+              drv:
+              pkgs.haskell.lib.doHaddock
+                (haskellAdj drv);
             };
         });
     };
