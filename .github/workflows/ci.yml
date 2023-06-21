@@ -26,9 +26,9 @@ jobs:
       - uses: cachix/install-nix-action@v20
         with:
           nix_path: nixpkgs=channel:nixos-23.05
-      - name: doc
+      - name: test
         shell: bash
-        run: nix build .#sayable.TESTS
+        run: nix build .#TESTS
   doc:
     runs-on: ubuntu-latest
     steps:
@@ -38,4 +38,4 @@ jobs:
           nix_path: nixpkgs=channel:nixos-23.05
       - name: doc
         shell: bash
-        run: nix build .#sayable.DOC
+        run: nix build .#DOC
