@@ -1,5 +1,14 @@
 # Revision history for sayable
 
+## 1.2.0.0 -- 2023-10-01
+
+* Changed `&+*` and `&!+*` to `&:*` and `&!:*` to avoid confusion with normal `+`
+  indication of concatenation.
+* Added `&+*` which acts like `&*` but does not add a space separator relative to
+  the preceding output.
+* Added `&+?` operator to show an immediate adjacent `Just` value.
+* Added various tests.
+
 ## 1.1.1.0 -- 2023-06-20
 
 * Add Haddock documentation showing examples for operators.
