@@ -340,6 +340,7 @@ module Text.Sayable
   , (&*)
   , (&+*)
   , (&?)
+  , (&+?)
   , (&<)
   , (&<*)
   , (&<?)
@@ -698,6 +699,24 @@ m &<? (Just n) = Saying
                  <> (PP.line :: PP.Doc SayableAnn)
                  <> (saying $ sayable @saytag n)
 infixl 1 &<?
+
+
+-- | A helper operator that emits the first argument and optionally emits a the
+-- 'Just' value of the second argument immediately thereafter if the second
+-- argument is not 'Nothing'
+--
+-- >>> sez @"info" $ t'"It's" &+? Nothing &- t'"ok" &+? Just "time"
+-- "It's oktime"
+--
+-- @since: 1.2.0.0
+(&+?) :: forall k saytag m n
+         . (Sayable (saytag :: k) m, Sayable (saytag :: k) n)
+      => m -> Maybe n -> Saying saytag
+m &+? Nothing = sayable m
+m &+? (Just n) = Saying
+                 $ (saying $ sayable @k @saytag m)
+                 <> (saying $ sayable @k @saytag n)
+infixl 1 &+?
 
 
 -- | A helper function to use when @OverloadedStrings@ is active to identify the
