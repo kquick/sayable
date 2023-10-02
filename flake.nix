@@ -53,30 +53,15 @@
             ghcver = levers.validGHCVersions pkgs.haskell.compiler;
             };
           pkgs = import nixpkgs { inherit system; };
+          wrap = levers.pkg_wrapper system pkgs;
           haskellAdj = drv:
             with (pkgs.haskell).lib;
             dontHaddock (dontCheck (dontBenchmark drv));
         in rec {
           ghc = pkgs.haskell.compiler.ghc8107;
           default = sayable;
-          TESTS =
-            builtins.derivation
-            {
-            name = "all_sayable_flake_tests";
-            inherit system;
-            builder = "${pkgs.bash}/bin/bash";
-            args = [ "-c" "echo OK > $out" ];
-            buildInputs = [ sayable_tests ];
-          };
-          DOC =
-            builtins.derivation
-            {
-            name = "all_sayable_flake_doc";
-            inherit system;
-            builder = "${pkgs.bash}/bin/bash";
-            args = [ "-c" "echo OK > $out" ];
-            buildInputs = [ sayable_doc ];
-          };
+          TESTS = wrap "Sayable-TESTS" [ sayable_tests ];
+          DOC = wrap "Sayable-DOC" [ sayable_doc ];
           sayable = mkHaskell "sayable" self {
             adjustDrv = args:
               drv:
