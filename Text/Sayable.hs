@@ -106,9 +106,11 @@ In the logging lines above, there are several operators used, each of which
 starts with the @&@ character.  These are described in detail in the 'Helper
 operators' section below, but the general mnemonic for these is:
 
-  * A dash is a space
+  * A dash is elements separated by a space
 
-  * A plus is immediate or specified separator
+  * A plus indicates immediately adjacent elements
+
+  * A colon is designates a separator
 
   * An asterisk is applied to a foldable (i.e. a list)
 
@@ -339,6 +341,7 @@ module Text.Sayable
   , (&%)
   , (&*)
   , (&+*)
+  , (&:*)
   , (&?)
   , (&+?)
   , (&<)
@@ -348,7 +351,7 @@ module Text.Sayable
   , (&!?)
   , (&!*)
   , (&!$*)
-  , (&!+*)
+  , (&!:*)
     -- * Annotation used in Sayables
     --
     -- | Generating a 'Prettyprinter.Doc' requires the identification of an @ann@
@@ -528,23 +531,42 @@ m &* l = let addElem e (s, Saying p) =
          in sayable m <> (snd $ foldr addElem ("", Saying PP.emptyDoc) l)
 infixl 1 &*
 
+-- | A helper operator that generates a sayable from a foldable group (e.g. list)
+-- of sayable items.  This helper is linke the '&*' operator except that the
+-- folded output is immediately adjacent to the preceeding sayable output instead
+-- of separated by a space; this is useful for situations where the folded output
+-- has delimiters like parentheses or brackets.
+--
+-- >>> sez @"info" $ t'"three:" &- '(' &+* [1,2,3::Int] &+ ')'
+-- "three: (1, 2, 3)"
+--
+-- If the second argument is an empty collection then no output is generated for
+-- it.
+
+(&+*) :: forall tag m e t
+        . (Sayable tag m, Sayable tag e, Foldable t) => m -> t e -> Saying tag
+m &+* l = let addElem e (s, Saying p) =
+               ("," <> PP.softline, Saying $ saying (sayable @tag e) <> s <> p)
+         in Saying (saying (sayable @tag m)
+                    <> saying (snd $ foldr addElem ("", Saying PP.emptyDoc) l))
+infixl 1 &+*
 
 -- | A helper operator that generates a sayable from a list of sayable items,
 -- separated by the first sayable argument (instead of the ", " that use used by
 -- the '&*' operator).
 --
--- >>> sez @"info" $ t'"three:" &- t'".." &+* [1, 2, 3::Int]
+-- >>> sez @"info" $ t'"three:" &- t'".." &:* [1, 2, 3::Int]
 -- "three: 1..2..3"
 --
-(&+*) :: forall tag m e t
+(&:*) :: forall tag m e t
          . (Sayable tag m, Sayable tag e, Foldable t) => m -> t e -> Saying tag
-m &+* l = let addElem e (s, Saying p) = (Just m,
+m &:* l = let addElem e (s, Saying p) = (Just m,
                                          case s of
                                            Nothing -> sayable @tag e &+ p
                                            Just s' -> sayable @tag e &+ s' &+ p
                                         )
           in snd $ foldr addElem (Nothing, Saying PP.emptyDoc) l
-infixl 2 &+*
+infixl 2 &:*
 
 -- | A helper operator that is a combination of the '&!' and '&*' operators.  It
 -- applies the first argument (which converts an array of 'Prettyprinter.Doc ann'
@@ -589,7 +611,7 @@ infixl 2 &!$*
 -- an array of 'Prettyprinter.Doc ann' elements to a single
 -- 'PrettyPrinter.Doc ann' element) to the second argument, which is a
 -- Foldable collection of 'Sayable' items.  This is essentially a
--- combination of the '&!' and '&+*' operators.
+-- combination of the '&!' and '&:*' operators.
 --
 -- Unlike the other operators defined in this package, this is a trinary operator
 -- rather than a binary operator.  Because function application (whitespace) is
@@ -597,18 +619,18 @@ infixl 2 &!$*
 -- to prevent applying the second argument to the third argument before applying
 -- this operator.
 --
--- >>> sez @"info" $ t'"three:" &- (PP.align . PP.vsep &!+* (t'" or")) [1, 2, 3::Int]
+-- >>> sez @"info" $ t'"three:" &- (PP.align . PP.vsep &!:* (t'" or")) [1, 2, 3::Int]
 -- "three: 1 or\n       2 or\n       3"
 --
-(&!+*) :: forall tag m t b . (Sayable tag b, Sayable tag m, Foldable t)
+(&!:*) :: forall tag m t b . (Sayable tag b, Sayable tag m, Foldable t)
        => ([PP.Doc SayableAnn] -> PP.Doc SayableAnn) -> b -> t m -> Saying tag
-pf &!+* b = let addElem e (s, p) =
+pf &!:* b = let addElem e (s, p) =
                   (Just b, (case s of
                                Nothing -> saying (sayable @tag e)
                                Just x -> saying (sayable @tag e &+ x)
                            ) : p)
             in Saying . pf . snd . foldr addElem (Nothing, [])
-infixl 2 &!+*
+infixl 2 &!:*
 
 
 -- | A helper operator allowing a Sayable item to be wrapped in a
@@ -709,13 +731,12 @@ infixl 1 &<?
 -- "It's oktime"
 --
 -- @since: 1.2.0.0
-(&+?) :: forall k saytag m n
-         . (Sayable (saytag :: k) m, Sayable (saytag :: k) n)
+(&+?) :: forall saytag m n . (Sayable saytag m, Sayable saytag n)
       => m -> Maybe n -> Saying saytag
 m &+? Nothing = sayable m
 m &+? (Just n) = Saying
-                 $ (saying $ sayable @k @saytag m)
-                 <> (saying $ sayable @k @saytag n)
+                 $ (saying $ sayable @saytag m)
+                 <> (saying $ sayable @saytag n)
 infixl 1 &+?
 
 

@@ -119,9 +119,11 @@ In the logging lines above, there are several operators used, each of which
 starts with the `&` character.  These are described in detail in the 'Helper
 operators' section below, but the general mnemonic for these is:
 
-  * A dash is a space
+  * A dash is a space between sayable elements
 
-  * A plus is immediate or specified separator
+  * A plus is immediately adjacent sayable elements
+
+  * A colon is a separator specification
 
   * An asterisk is applied to a foldable (i.e. a list)
 

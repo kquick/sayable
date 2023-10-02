@@ -43,7 +43,10 @@ tests = testGroup "Sayable" <$> sequence
       it "renders &*" $
         (sez @"info" $ t'"three:" &* [1, 2, 3::Int]) `shouldBe` "three: 1, 2, 3"
       it "renders &+*" $
-        (sez @"info" $ t'"three:" &- t'".." &+* [1, 2, 3::Int])
+        (sez @"info" $ t'"three:" &- '(' &+* [1, 2, 3::Int] &+ ')')
+        `shouldBe` "three: (1, 2, 3)"
+      it "renders &:*" $
+        (sez @"info" $ t'"three:" &- t'".." &:* [1, 2, 3::Int])
         `shouldBe` "three: 1..2..3"
       it "renders &!*" $
         (sez @"info" $ t'"three:" &- PP.align . PP.vsep &!* [1, 2, 3::Int])
@@ -51,8 +54,8 @@ tests = testGroup "Sayable" <$> sequence
       it "renders &!$*" $
         (sez @"info" $ t'"three:" &- PP.align &!$* [1, 2, 3::Int])
          `shouldBe` "three: 1, 2, 3"
-      it "renders &!+*" $
-        (sez @"info" $ t'"three:" &- (PP.align . PP.vsep &!+* (t'" or")) [1, 2, 3::Int])
+      it "renders &!:*" $
+        (sez @"info" $ t'"three:" &- (PP.align . PP.vsep &!:* (t'" or")) [1, 2, 3::Int])
         `shouldBe` "three: 1 or\n       2 or\n       3"
       it "renders &?" $
         (sez @"info" $ t'"It's" &? Just (t'"something") &- t'"or" &? (Nothing :: Maybe Text))
