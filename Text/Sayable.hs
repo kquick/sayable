@@ -1,7 +1,8 @@
 {- |
 Module: Text.Sayable
 
-This module provides a set of data structures, classes, and operators that facilitate the construction of a Prettyprinter Doc object.
+This module provides a set of data structures, classes, and operators that
+facilitate the construction of a Prettyprinter Doc object.
 
 = Motivation
 
@@ -40,12 +41,13 @@ foo arg1 arg2 =
              throwError err
 @
 
-[Note: if viewing via Haddock HTML, the '@' in front of @"info"@,
+[Note: if viewing via Haddock HTML, the ampersand in front of @"info"@,
 @"verbose"@, and @"error"@ on the putStrLn lines above may not be
 visible.]
 
 There are three messages printed: one on entry and one on either the success or
-failure paths.  Each message may have different levels of information reported for the various arguments.
+failure paths.  Each message may have different levels of information reported
+for the various arguments.
 
 == The @saytag@ type parameter
 
@@ -100,125 +102,27 @@ datatypes for convenience.
 
 == Operators
 
-In the logging lines above, there are three operators used, each of
-which starts with the @&@ character:
+In the logging lines above, there are several operators used, each of which
+starts with the @&@ character.  These are described in detail in the 'Helper
+operators' section below, but the general mnemonic for these is:
 
-  ['&-'] This is the standard operator that takes two Sayable
-         arguments and converts them to their Sayable form, then
-         combining them (with an intervening space).  This is the
-         standard argument to use for building the output message from
-         distinct parts.
+  * A dash is a space
 
-         >>> sez @"info" $ t'"hello" &- t'"world"
-         "hello world"
+  * A plus is immediate or specified separator
 
-  ['&+'] This is a variation of the standard '&-' operator that has no
-         intervening space between the two arguments that are
-         converted to a Sayable form.
+  * An asterisk is applied to a foldable (i.e. a list)
 
-         >>> sez @"info" $ t'"hello" &+ t'"world"
-         "helloworld"
+  * A percent sign preceeds a Pretty object
 
-  ['&%'] This is a variation of the standard '&-' operator that only
-         requires the second argument to be an instances of
-         Prettyprinter.Pretty instead of an instance of 'Sayable',
-         which can be convenient and avoids the need to define large
-         numbers of 'Sayable' instances.
+  * An exclamation follows a Pretty function, which is applied to the following
+    argument.
 
-         >>> sez @"info" $ t'"hello" &% (t'"world", t'"!")
-         "hello (world, !)"
+  * A question mark is followed by a Maybe, with no output for a Nothing
 
-  ['&*'] This is a helper operator whose second argument is a
-         'Foldable' series of 'Sayable' elements.  This will fold over
-         the series, adding the 'Sayable' instance value for each
-         element separated by commas.
+  * A less-than character means newline (i.e. return to the left)
 
-         >>> sez @"info" $ t'"three:" &* [1, 2, 3::Int]
-         "three: 1, 2, 3"
+These characters will be combined for operators with combination effects.
 
-  ['&+*'] This is similar to the '&*' helper, but it uses the first
-          argument as the separator between the elements of the
-          'Foldable' second argument (instead of the ", " default used
-          by the '&*' helper).
-
-         >>> sez @"info" $ t'"three:" &- t'".." &+* [1, 2, 3::Int]
-         "three: 1..2..3"
-
-  ['&?'] This is a helper operator whose second argument is a @Maybe
-         a@ (where @a@ is a @Showable@).  This will emit the
-         @Showable@ of @a@ if the argument is a 'Just' value, or
-         nothing (an empty Text Showable) if the argument is a
-         'Nothing' value.
-
-         >>> sez @"info" $ t'"It's" &? Just (t'"something") &- t'"or" &? (Nothing :: Maybe Text)
-         "It's something or"
-
-  ['&<'] This is a helper operator that generates a newline between its two
-         arguments.
-
-         >>> sez @"info" $ t'"Hello" &< t'"world"
-         "Hello\nworld"
-
-  ['&<*'] This is a helper operator that combines the '&<' and '&*' operators: it
-          generates a newline between its two arguments and the second argument
-          is a Foldable that will be output separated by commas.
-
-         >>> sez @"info" $ t'"three:" &<* [1, 2, 3::Int]
-         "three:\n1, 2, 3"
-
-  ['&<?'] This is a helper operator that conbines the '&<' and '&?' operators: if
-          the second argument is a 'Just' value, it will be output preceeded by
-          the first argument and a newline.  If the second argument is 'Nothing',
-          only the first argument is emitted (no newline either).
-
-         >>> sez @"info" $ t'"First" &<? Just (t'"something")
-         "First\nsomething"
-         >>> sez @"info" $ t'"Then" &<? (Nothing :: Maybe Text)
-         "Then"
-
-  ['&!'] This is a helper operator to apply a Prettyprinter
-         transformation function (the first argument) to a 'Sayable'
-         message (the second argument).
-
-         >>> sez @"info" $ PP.group &! t'"hi"
-         "hi"
-
-  ['&!?'] This helper operator is a combination of the '&!' operator and the '&?'
-          operator: for a second-argument 'Just' value it will convert the value
-          to a sayable and then apply the Prettyprinter conversion operator
-          first-argument.
-
-         >>> sez @"info" $ PP.group &!? Just (t'"hi")
-         "hi"
-
-  ['&!*'] This helper operator is a combination of the '&!' operator
-          and the '&*' operator: it applies the first argument (a
-          @[PrettyPrinter.Doc ann] -> PrettyPrinter.Doc ann@ function)
-          to the foldable collection represented by the second
-          argument.
-
-         >>> sez @"info" $ t'"three:" &- PP.align . PP.vsep &!* [1, 2, 3::Int]
-         "three: 1, \n       2, \n       3"
-
-  ['&!$*'] This helper operator is a combination of the '&!' operator and the
-           '&*' operator: it applies the first argument (a @PrettyPrinter.Doc ann
-           -> PrettyPrinter.Doc ann@ function) to the *result* of a foldable
-           collection represented by the second argument.  It is similar to the
-           '&!*' operator except that it applies the Prettyprinter conversion to
-           the singular result of the list rather than to the list of results.
-
-           >>> sez @"info" $ t'"three:" &- PP.align &!$* [1, 2, 3::Int]
-           "three: 1, 2, 3"
-
-  ['&!+*'] This helper operator is a combination of the '&!' operator and the
-           '&+*' operator (and is a trinary rather than a binary operator): it
-           applies the first argument (a @[PrettyPrinter.Doc ann] ->
-           PrettyPrinter.Doc ann@ function) to the foldable collection
-           represented by the third argument, using the second argument to
-           specify the separators between the elements.
-
-           >>> sez @"info" $ t'"three:" &- (PP.align . PP.vsep &!+* (t'" or")) [1, 2, 3::Int]
-           "three: 1 or\n       2 or\n       3"
 
 == Convenience/other
 
@@ -548,6 +452,10 @@ instance PP.Pretty (Saying tag) where pretty = PP.unAnnotate . saying
 -- a Saying.  This is the most common operator used to construct
 -- composite Sayable messages.  The two Sayable items are separated by
 -- a space.
+--
+-- >>> sez @"info" $ t'"hello" &- t'"world"
+-- "hello world"
+--
 (&-) :: forall saytag m n . (Sayable saytag m, Sayable saytag n)
      => m -> n -> Saying saytag
 m &- n = sayable m <> sayable n
@@ -557,6 +465,10 @@ infixl 1 &-
 -- a Saying by placing the two Sayable items immediately adjacent with
 -- no intervening spaces.  This is the high-density version of the
 -- more common '&-' operator.
+--
+-- >>> sez @"info" $ t'"hello" &+ t'"world"
+-- "helloworld"
+--
 (&+) :: forall saytag m n . (Sayable saytag m, Sayable saytag n)
      => m -> n -> Saying saytag
 m &+ n = Saying $ (saying $ sayable @saytag m) <> (saying $ sayable @saytag n)
@@ -566,6 +478,10 @@ infixl 1 &+
 -- Pretty item into a Saying.  This is infrequently used and primarily
 -- allows the composition of a data object which has a "Prettyprinter"
 -- instance but no 'Sayable' instance.
+--
+-- >>> sez @"info" $ t'"hello" &% (t'"world", t'"!")
+-- "hello (world, !)"
+--
 (&%) :: (Sayable tag m, PP.Pretty n) => m -> n -> Saying tag
 m &% n = sayable m <> sayable (PP.pretty n :: PP.Doc SayableAnn)
 infixl 1 &%
@@ -573,11 +489,15 @@ infixl 1 &%
 -- | A helper operator to /apply/ a "Prettyprinter" (@Doc ann -> Doc
 -- ann@) function (the first argument) to the Sayable in the second
 -- argument.  This is different from the '&%' operator in that the
--- former uses 'Prettyprinter.hsep' to join two independent
+-- former uses 'Prettyprinter.hcat' to join two independent
 -- 'Prettyprinter.Doc' 'Saying' values, whereas this operator applies
 -- a transformation (e.g. @Prettyprinter.annotate AnnValue@ or
 -- @Prettyprinter.align . Prettyprinter.group@) to the
 -- 'Prettyprinter.Doc' in the second 'Saying' argument.
+--
+-- >>> sez @"info" $ PP.group &! t'"hi"
+-- "hi"
+--
 (&!) :: forall tag m . Sayable tag m
      => (PP.Doc SayableAnn -> PP.Doc SayableAnn) -> m -> Saying tag
 pf &! m = Saying $ pf $ saying $ sayable @tag m
@@ -594,6 +514,12 @@ infixl 2 &!
 -- folding over a tuple only returns the 'snd' value of a tuple.
 -- Consider wrapping tuples in a newtype with an explicit Sayable to
 -- avoid this.
+--
+-- >>> sez @"info" $ t'"three:" &* [1, 2, 3::Int]
+-- "three: 1, 2, 3"
+--
+-- If the second argument is a null collection then no output is generated for
+-- it.
 (&*) :: forall tag m e t
         . (Sayable tag m, Sayable tag e, Foldable t) => m -> t e -> Saying tag
 m &* l = let addElem e (s, Saying p) =
@@ -602,8 +528,13 @@ m &* l = let addElem e (s, Saying p) =
 infixl 1 &*
 
 
--- | A helper operator that generates a sayable from a list of sayable
--- items, separated by the first sayable
+-- | A helper operator that generates a sayable from a list of sayable items,
+-- separated by the first sayable argument (instead of the ", " that use used by
+-- the '&*' operator).
+--
+-- >>> sez @"info" $ t'"three:" &- t'".." &+* [1, 2, 3::Int]
+-- "three: 1..2..3"
+--
 (&+*) :: forall tag m e t
          . (Sayable tag m, Sayable tag e, Foldable t) => m -> t e -> Saying tag
 m &+* l = let addElem e (s, Saying p) = (Just m,
@@ -614,17 +545,13 @@ m &+* l = let addElem e (s, Saying p) = (Just m,
           in snd $ foldr addElem (Nothing, Saying PP.emptyDoc) l
 infixl 2 &+*
 
-
--- | A helper operator that applies the first argument which converts an array of
--- 'Prettyprinter.Doc ann' elements to a single 'PrettyPrinter.Doc ann' element
--- to the second argument, which is a Foldable collection of 'Sayable' items.
--- This is essentially a combination of the '&!' and '&*' operators where the
--- first operation takes the list of doc items and returns a single item.
+-- | A helper operator that is a combination of the '&!' and '&*' operators.  It
+-- applies the first argument (which converts an array of 'Prettyprinter.Doc ann'
+-- elements into a single 'PrettyPrinter.Doc ann' element) to the second argument
+-- (which is a Foldable collection of 'Sayable' items).
 --
--- > import qualified Prettyprinter as PP
--- >
--- > putStrLn $ sez @"info" $ t'"The stooges are" &- PP.hsep &!* ["Larry", "Mo", "Curly"]
--- The stooges are Larry Mo Curly
+-- >>> sez @"info" $ t'"three:" &- PP.align . PP.vsep &!* [1, 2, 3::Int]
+-- "three: 1, \n       2, \n       3"
 --
 (&!*) :: forall tag m t
          . (Sayable tag m, Foldable t)
@@ -640,6 +567,14 @@ infixl 2 &!*
 -- items.  This is essentially a combination of the '&!' and '&*' operators where
 -- the first operation is applied to the entire list, rather than each element of
 -- the list (as with `&!*`).
+--
+-- >>> sez @"info" $ t'"three:" &- PP.align &!$* [1, 2, 3::Int]
+-- "three: 1, 2, 3"
+--
+-- As with the '&!*' operator (and unlike the '&*' operator), a null collection
+-- is passed to the converter first argument.
+--
+-- @since: 1.1.0.0
 (&!$*) :: forall tag m t
          . (Sayable tag m, Foldable t)
       => (PP.Doc SayableAnn -> PP.Doc SayableAnn) -> t m -> Saying tag
@@ -649,9 +584,9 @@ pf &!$* l = let addElem e (s, p) = ("," <> PP.softline
 infixl 2 &!$*
 
 
--- | A helper operator that applies the first argument which converts
+-- | A helper operator that applies the first argument (which converts
 -- an array of 'Prettyprinter.Doc ann' elements to a single
--- 'PrettyPrinter.Doc ann' element to the second argument, which is a
+-- 'PrettyPrinter.Doc ann' element) to the second argument, which is a
 -- Foldable collection of 'Sayable' items.  This is essentially a
 -- combination of the '&!' and '&+*' operators.
 --
@@ -661,10 +596,8 @@ infixl 2 &!$*
 -- to prevent applying the second argument to the third argument before applying
 -- this operator.
 --
--- > import qualified Prettyprinter as PP
--- >
--- > putStrLn $ sez @"info" $ PP.fillSep &!+* t'" and " $ ["one", "two", "three"]
--- one and two and three
+-- >>> sez @"info" $ t'"three:" &- (PP.align . PP.vsep &!+* (t'" or")) [1, 2, 3::Int]
+-- "three: 1 or\n       2 or\n       3"
 --
 (&!+*) :: forall tag m t b . (Sayable tag b, Sayable tag m, Foldable t)
        => ([PP.Doc SayableAnn] -> PP.Doc SayableAnn) -> b -> t m -> Saying tag
@@ -682,26 +615,42 @@ infixl 2 &!+*
 -- 'Sayable' of the second argument in the 'Just' case, or just emits
 -- the 'Sayable' of the first argument if the second argument is
 -- 'Nothing'.
+--
+-- >>> sez @"info" $ t'"It's" &? Just (t'"something") &- t'"or" &? (Nothing :: Maybe Text)
+-- "It's something or"
+--
 (&?) :: forall tag m e
         . (Sayable tag m, Sayable tag e) => m -> Maybe e -> Saying tag
 m &? Nothing = sayable m
 m &? (Just a) = sayable m <> sayable a
 infixl 1 &?
 
+
 -- | A helper operator allowing a Sayable item to be wrapped in a 'Maybe' and a
 -- prettyprinter conversion as the first argument.  This is a combination of the
 -- `&!` and `&?` operators.
+--
+-- >>> sez @"info" $ PP.group &!? Just (t'"hi")
+-- "hi"
+--
+-- @since: 1.1.0.0
 (&!?) :: forall tag e . (Sayable tag e)
       => (PP.Doc SayableAnn -> PP.Doc SayableAnn) -> Maybe e -> Saying tag
 _ &!? Nothing = Saying mempty
 pf &!? (Just a) = Saying $ pf $ saying $ sayable @tag a
 infixl 1 &!?
 
+
 -- | A helper operator that generates a newline between its two arguments.  Many
 -- times the '&-' operator is a better choice to allow normal prettyprinter
 -- layout capabilities, but in situations where it is known that multiple lines
 -- will or should be generated, this operator makes it easy to separate the
 -- lines.
+--
+-- >>> sez @"info" $ t'"Hello" &< t'"world"
+-- "Hello\nworld"
+--
+-- @since: 1.1.0.0
 (&<) :: forall saytag m n . (Sayable saytag m, Sayable saytag n)
      => m -> n -> Saying saytag
 m &< n = Saying
@@ -710,9 +659,15 @@ m &< n = Saying
          <> (saying $ sayable @saytag n)
 infixl 1 &<
 
+
 -- | A helper operator that combines '&<' and '&*' which will generate a newline
 -- between its two arguments, where the second argument is a foldable collection
 -- whose elements will be sayable emitted with comma separators.
+--
+-- >>> sez @"info" $ t'"three:" &<* [1, 2, 3::Int]
+-- "three:\n1, 2, 3"
+--
+-- @since: 1.1.0.0
 (&<*) :: forall saytag m n t . (Sayable saytag m, Sayable saytag n, Foldable t)
       => m -> t n -> Saying saytag
 m &<* n = let addElem e (s, Saying p) =
@@ -724,9 +679,17 @@ m &<* n = let addElem e (s, Saying p) =
                   (snd $ foldr addElem ("", Saying PP.emptyDoc) n))
 infixl 1 &<*
 
+
 -- | A helper operator that emits the first argument and optionally emits a
 -- newline and the 'Just' value of the second argument if the second argument is
--- not 'Nothing'
+-- not 'Nothing' (a combination of the '&<' and '&?' operators).
+--
+-- >>> sez @"info" $ t'"First" &<? Just (t'"something")
+-- "First\nsomething"
+-- >>> sez @"info" $ t'"Then" &<? (Nothing :: Maybe Text)
+-- "Then"
+--
+-- @since: 1.1.0.0
 (&<?) :: forall saytag m n . (Sayable saytag m, Sayable saytag n)
       => m -> Maybe n -> Saying saytag
 m &<? Nothing = sayable m
@@ -737,8 +700,16 @@ m &<? (Just n) = Saying
 infixl 1 &<?
 
 
--- | A helper function to use when @OverloadedStrings@ is active to
--- identify the following quoted literal as a "Data.Text" object.
+-- | A helper function to use when @OverloadedStrings@ is active to identify the
+-- following quoted literal as a "Data.Text" object.  It is common to enable
+-- OverloadedStrings because 'Prettyprinter.Pretty' declares an 'Data.String.IsString'
+-- instance and thus facilitates the pretty-printing of string values, but this
+-- causes GHC to emit warnings about assuming the types of strings, so this
+-- function can be used to clarify the intended type.
+--
+-- >>> putStrLn $ t'"This is type: Data.Text"
+-- "This is type: Data.Text"
+--
 t' :: Text -> Text
 t' = id
 {-# INLINE t' #-}
