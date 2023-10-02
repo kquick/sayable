@@ -21,6 +21,7 @@ copyright:          Galois Inc., 2023
 category:           Text
 build-type:         Simple
 extra-doc-files:    CHANGELOG.md
+                    README.md
 tested-with:        GHC == 9.6.2, GHC == 9.4.5, GHC == 9.2.7, GHC == 9.0.2, GHC == 8.10.7, GHC == 8.8.4
 
 source-repository head
