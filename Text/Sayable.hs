@@ -425,6 +425,8 @@ instance Sayable tag W.Word16
 instance Sayable tag W.Word32
 instance Sayable tag W.Word64
 instance Sayable tag Natural
+instance Sayable tag Float
+instance Sayable tag Double
 instance Sayable tag TL.Text
 instance Sayable tag BS.ByteString where sayable = sayable . TE.decodeUtf8
 instance Sayable tag BSL.ByteString where sayable = sayable . TEL.decodeUtf8
