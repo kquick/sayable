@@ -798,6 +798,10 @@ instance KnownSymbol ann => IsLabel (ann :: Symbol) SayableAnn where
 --  This function is often used with a type application:
 --
 --  > putStrLn $ sez @"info" $ "There are" &- length lst &- "list elements."
+--
+-- Note that this will use the 'show' representation provided by 'Prettyprinter';
+-- notably this will usually assume a width of 80 characters and perform wrapping
+-- accordingly.
 
 sez :: forall saytag a . Sayable saytag a => a -> String
 sez = show . saying . sayable @saytag
