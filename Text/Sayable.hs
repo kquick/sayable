@@ -362,6 +362,7 @@ module Text.Sayable
   , SayableAnn(SayableAnn)
     -- * Simple String Extraction
   , sez
+  , sez_
   )
 where
 
@@ -380,6 +381,7 @@ import           GHC.TypeLits ( Symbol, KnownSymbol, symbolVal' )
 import           Numeric.Natural ( Natural )
 import           Prettyprinter ( (<+>) )
 import qualified Prettyprinter as PP
+import qualified Prettyprinter.Render.String as PPS
 
 
 -- | The main class of things that can be passed to 'sayable'.  Arguments
@@ -805,3 +807,11 @@ instance KnownSymbol ann => IsLabel (ann :: Symbol) SayableAnn where
 
 sez :: forall saytag a . Sayable saytag a => a -> String
 sez = show . saying . sayable @saytag
+
+-- | This is a convenience function similar to the 'sez' helper, but specifies an
+-- unlimited width so there is no wrapping.
+
+sez_ :: forall saytag a . Sayable saytag a => a -> String
+sez_ = PPS.renderString
+       . PP.layoutPretty (PP.LayoutOptions PP.Unbounded)
+       . saying . sayable @saytag
