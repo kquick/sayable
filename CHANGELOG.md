@@ -1,5 +1,11 @@
 # Revision history for sayable
 
+## 1.2.2.0 -- 2023-10-18
+
+* Added `sez_` helper, which is the same as `sez` but it uses an unlimited output
+  width to ensure the result is not wrapped (unless the output explicitly
+  specifies newlines).
+
 ## 1.2.1.0 -- 2023-10-18
 
 * Added default `Sayable` instances for `Float` and `Double`.
