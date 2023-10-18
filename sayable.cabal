@@ -1,6 +1,6 @@
 cabal-version:      2.4
 name:               sayable
-version:            1.2.0.0
+version:            1.2.1.0
 synopsis: Data structures, classes and operators for constructing context-adjusted pretty output
 description:
    .

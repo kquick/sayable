@@ -1,5 +1,9 @@
 # Revision history for sayable
 
+## 1.2.1.0 -- 2023-10-18
+
+* Added default `Sayable` instances for `Float` and `Double`.
+
 ## 1.2.0.0 -- 2023-10-01
 
 * Changed `&+*` and `&!+*` to `&:*` and `&!:*` to avoid confusion with normal `+`
