@@ -245,8 +245,12 @@ LOUD: bar is {! "https://github.com/by/one" !} via {! "https://github.com/by/one
   by the @Sayable@ keyword, but that doesn't render under HTML Haddock
   (circa 2022).]
 
-  There's another twist to this story though.  To observe this new
-  twist, add a @Baz@ datastructure and its generic 'Sayable' instance:
+=== Sub-Element Constraints
+
+  There's another annoyance to address when using Sayable: t he need for explicit
+  contraints ofr data structure sub-elements.  To observe this new twist, add a
+  @Baz@ datastructure and its generic 'Sayable' instance to the previous
+  section's example:
 
   > data Baz = Baz Foo
   > instance Sayable saytag Baz where sayable (Baz a) = t'"BAZ :=" &- foo
@@ -292,6 +296,17 @@ LOUD: bar is {! "https://github.com/by/one" !} and BAZ := "https://github.com/by
 > instance Sayable saytag Foo => Sayable saytag Baz where
 >   sayable (Baz a) = t'"BAZ :=" &- foo
 
+     To facilitate generating the needed set of constraints for sub-elements
+     (including ensuring that a sub-element isn't missed when writing these by
+     hand), there is a Template Haskell helper that will automatically generate
+     these constraints:
+
+> instance $(sayableSubConstraints (const True) ''Baz "tag" []) => Sayable tag Baz where ...
+
+     See the 'sayableSubConstraints' documentation for more information on using
+     this Template Haskell helper.
+
+
   Using either of the above solutions, the new output is fully
   specialized as desired:
 
@@ -299,11 +314,6 @@ LOUD: bar is {! "https://github.com/by/one" !} and BAZ := "https://github.com/by
 INFO: bar is "https://github.com/by/one" and BAZ := "https://github.com/by/one"
 >>> putStrLn $ sez @"loud" $ t'"LOUD:" &- bar &- t'"and" &- baz
 LOUD: bar is {! "https://github.com/by/one" !} and BAZ := {! "https://github.com/by/one" !}
-
-
-  The good news here is that the complexity is all handled at the
-  Sayable instance definition and the client usage calls are all
-  unaffected, regardless of which solution is chosen.
 
 -}
 
@@ -319,6 +329,7 @@ LOUD: bar is {! "https://github.com/by/one" !} and BAZ := {! "https://github.com
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
@@ -363,13 +374,29 @@ module Text.Sayable
     -- * Simple String Extraction
   , sez
   , sez_
+    -- * Sub-element Sayable constraints
+  , sayableSubConstraints
+  , ConstrM
+  , ofType
+  , tagVar
+  , tagSym
+  , subWrapper
+  , subElemFilter
+  , paramVar
+  , paramSym
+  , paramNat
+  , paramTH
   )
 where
 
+import           Control.Applicative ( liftA )
+import           Control.Monad ( ap )
 import qualified Control.Monad.Catch as X
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
+import           Data.Either ( rights )
 import qualified Data.Int as I
+import qualified Data.Map as Map
 import           Data.Text ( Text, pack )
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
@@ -378,6 +405,8 @@ import qualified Data.Word as W
 import           GHC.Exts ( Proxy#, proxy# )
 import           GHC.OverloadedLabels
 import           GHC.TypeLits ( Symbol, KnownSymbol, symbolVal' )
+import           Language.Haskell.TH as TH
+import           Language.Haskell.TH.Datatype
 import           Numeric.Natural ( Natural )
 import           Prettyprinter ( (<+>) )
 import qualified Prettyprinter as PP
@@ -815,3 +844,416 @@ sez_ :: forall saytag a . Sayable saytag a => a -> String
 sez_ = PPS.renderString
        . PP.layoutPretty (PP.LayoutOptions PP.Unbounded)
        . saying . sayable @saytag
+
+
+----------------------------------------------------------------------
+
+-- | When creating 'Sayable' instances, it is necessary to create a Sayable
+-- constraint for all sub-element data structures so that GHC will search for the
+-- specific tagged instance, otherwise GHC will use a default instance that is
+-- not necessarily associated with the current tag (see the "Sub-Element
+-- Constraints" section above for more information).
+--
+-- The 'sayableSubConstraints' function is a Template Haskell helper that can
+-- automatically generate the constraints for the sub-elements of this
+-- datastructure.  This has several advantages, including brevity and ensuring
+-- that no sub-elements are missed.  The 'sayableSubConstraints' is a function
+-- taking a 'ConstrM' monad where that monad specifies the various information
+-- (via the 'ConstrM' operations defined below) that are needed to generate the
+-- sub-element constraints.
+--
+-- To use this, you will need to enable the @ConstraintKinds@ and
+-- @TemplateHaskell@ pragmas.
+--
+-- With these enabled, the instance declaration would
+-- be specified as:
+--
+-- > instance $(sayableSubConstraints $ ofType ''Baz) => Sayable saytag Foo where ...
+--
+-- If there are other constraints that should also be included, those can be
+-- specified in a standard constraint tuple:
+--
+-- @
+-- instance ( $(sayableSubConstraints $ ofType ''Baz)
+--          , Show Bar
+--          ) => Sayable tag Foo where ...
+-- @
+--
+-- The 'sayableSubConstraints' function will examine the definition of the type
+-- referenced by the second argument, and for every sub-type referenced (that is
+-- accepted by any 'subElemFilter' specified), it will generate a Sayable
+-- constraint for the sub type(s).
+--
+-- @
+-- data Bar = ...
+-- data Baz = ...
+-- data Foo = Foo { fld1 :: Bar
+--                , fld2 :: [Baz]
+--                , fld3 :: Maybe Bar
+--                }
+--
+-- instance $(sayableSubConstraints $ do ofType ''Foo
+--                                       tagVar "stag"
+--           ) => Sayable stag Foo where
+--   sayable foo = ...
+-- @
+--
+-- becomes (via the magic of Template Haskell):
+--
+-- @
+-- instance ( Sayable stag Bar
+--          , Sayable stag Baz
+--          ) => Sayable stag Foo where
+--   sayable foo = ...
+-- @
+--
+-- The 'subElemFilter' 'ConstrM' operation can be used to select only a subset of
+-- the sub-elements for this constraints generation.  For example, with the
+-- following definition:
+--
+-- @
+-- data Foo2 = FC1 Bar [Maybe Baz] | FC2 Bar Int HiddenValue
+-- @
+--
+-- The Sayable instance for Foo2 does not need a tag-specific constraint for the
+-- Int type, and the instance will not output the @fld5@ hidden value, so no
+-- 'Sayable' instance constraint is needed (and in fact, for safety, no actual
+-- 'Sayable' instance will ever be created for @HiddenValue@).  To support this,
+-- a filtering function can be used for the "Language.Haskell.TH.Name" type
+-- references:
+--
+-- @
+-- module MyModule where
+--
+-- import qualified Language.Haskell.TH as TH
+--
+-- data Bar = ...
+-- data Baz = ...
+-- data HiddenValue = ...
+-- data Foo2 = FC1 Bar [Baz] | FC2 (Maybe Bar) Int HiddenValue
+--
+-- foo2Filter :: TH.Name -> Bool
+-- foo2Filter nm = and [ \"HiddenValue\" /= TH.nameBase nm
+--                     , maybe False (\"MyModule\" ==) $ TH.nameModule nm
+--                     ]
+--
+-- instance $(sayableSubConstraints $ do ofType ''Foo2
+--                                       tagVar "t"
+--                                       subElemFilter foo2Filter
+--           ) => Sayable t Foo2 where
+--   sayable = \case
+--       FC1 x y -> "First Foo2 form with" &- x &- "and" &- y
+--       FC2 x y h -> "Second Foo2 form with" &? x &- y
+--
+-- instance Sayable t Bar where ...
+-- instance Sayable t Baz where ...
+-- @
+--
+-- which generates:
+--
+-- @
+-- instance ( Sayable t Bar, Sayable t Baz ) => Sayable t Foo2 where ...
+-- @
+--
+-- When the sub-elements are themselves parameterized, it is necessary to specify
+-- what those parameters should map to: either the same parameter variables that
+-- occur on the main type, or other types or values based on the usage of the
+-- main type.  This can be done using the 'paramVar', 'paramSym', 'paramNat', or
+-- 'paramTH' 'ConstrM' operations.  Each of these param declarations specifies
+-- one of the parameters for sub-elements. All sub-elements must specify the
+-- parameters in the same order, although each does not need to use all of the
+-- parameters; sub-element types that do not follow this arrangement will need to
+-- be manually specified instead (and filtered out of the template-haskell
+-- generated constraints via the 'subElemFilter').
+--
+-- @
+-- data Bar a = Bar (Maybe a)
+-- data Baz a b = BazL a | BazR b
+--
+-- data Foo3 a = Foo3 { inputs :: Bar a, outputs :: Baz a String }
+--
+-- instance $(sayableSubConstraints $ do ofType ''Foo3
+--                                       tagVar "t"
+--                                       paramVar "a"
+--                                       paramTH $ TH.ConT ''String
+--           ) => Sayable t (Foo3 a) where ...
+-- @
+--
+-- generates the following:
+--
+-- @
+-- instance ( Sayable t (Bar a), Sayable t (Baz a String), Sayable t a ) => Sayable (Foo3 a) where ...
+-- @
+--
+-- Clearly, there are some limitations to the 'sayableSubConstraints'
+-- capabilities, so it is not always useable in all situations (e.g. with
+-- tuples).  The sub-element constraints can and should be manually generated in
+-- these situations.
+--
+-- In order to debug the output of the 'sayableSubConstraints' or otherwise
+-- examine its suitability, enable @-ddump-splices@ when compiling.
+--
+sayableSubConstraints :: ConstrM () -> PredQ
+sayableSubConstraints cspec =
+  let initCtx = SCCtx { cTgt = ''()
+                      , cFilt = const True
+                      , cSaytag = Right "saytag"
+                      , cVars = mempty
+                      , cWrapper = Nothing
+                      }
+      (ctx, _) = runConstrM cspec initCtx
+  in sayableSubConstraints' (cFilt ctx) (cTgt ctx) (cSaytag ctx) (cWrapper ctx) (cVars ctx)
+
+
+-- | ConstrM is a monadic context for describing the constraint parameters needed
+-- by 'sayableSubConstraints' when generating sub-element Sayable constraints.
+newtype ConstrM a = ConstrM { runConstrM :: SCCtx -> (SCCtx, a) }
+
+instance Applicative ConstrM where
+  pure x = ConstrM $ \c -> (c, x)
+  (<*>) = ap
+
+instance Functor ConstrM where fmap = liftA
+
+instance Monad ConstrM where
+  return = pure
+  m >>= k = ConstrM $ \c -> let (c', a) = runConstrM m c in runConstrM (k a) c'
+
+
+-- | This ConstrM operation is used to declare the target data type for which the
+-- Sayable constraints are to be generated via template-haskell.
+--
+-- > instance $(sayableSubConstraints $ do { ofType ''Foo; ... }) => Sayable t Foo where
+--
+-- If not used, the default type is @()@, which is not likely to be the desired
+-- type.
+ofType :: Name -> ConstrM ()
+ofType nm = ConstrM $ \c -> (c { cTgt = nm }, ())
+
+-- | This ConstrM operation is used to declare the name of the saytag variable
+-- used to specify the "Saying VAR sub-element" constraints.  This should match
+-- the variable for the primary instance declaration.
+--
+-- > instance $(sayableSubConstraints $ do { ...; tagVar "t" }) => Sayable t X where ...
+--
+-- If not used, the default saytag is the variable @saytag@.  This operation is
+-- coincident with the 'tagSym', 'tagNat', and 'tagTH' operations and the last
+-- such operation will be the one used.
+tagVar :: String -> ConstrM ()
+tagVar var = ConstrM $ \c -> (c { cSaytag = Right var }, ())
+
+-- | This ConstrM operation is used to declare a Symbol singleton value for the
+-- saytag of the sub-element Sayable constraints.  This should match the Symbol
+-- used for the primary instance declaration.
+--
+-- @
+-- instance $(sayableSubConstraints $ do tagSym "loud"
+--                                       ofType ''X
+--           ) => Sayable "loud" X where ...
+-- @
+--
+-- If not used, the default saytag is the variable @saytag@.  This operation is
+-- coincident with the 'tagVar', 'tagNat', and 'tagTH' operations and the last
+-- such operation will be the one used.
+tagSym :: String -> ConstrM ()
+tagSym str = ConstrM $ \c -> (c { cSaytag = Left $ TH.LitT $ TH.StrTyLit str }, ())
+
+-- | Sometimes the sub-constraints should be wrapped in another type (via a
+-- constructor for that type).  For example:
+--
+-- @
+-- data WithIndentation a = WInd Int a
+--
+-- data Foo { subVal :: Bar }
+--
+-- instance $(sayableSubConstraints $ do ofType ''Foo
+--                                       subWrapper (TH.ConT ''WithIndentation)
+--           ) => Sayable saytag Foo where
+--    sayable foo = "FOO" &< WInd 2 (subVal foo)
+--
+subWrapper :: Type -> ConstrM ()
+subWrapper wrp = ConstrM $ \c -> (c { cWrapper = Just wrp }, ())
+
+
+-- | This ConstrM operation is used to declare a filter to be applied to the
+-- sub-elements: only sub-element 'Name' candidates for which this filter
+-- function returns 'True' will have a Sayable constraint generated.
+--
+-- @
+-- myModuleNames :: TH.Name -> Bool
+-- myModuleNames = maybe False ("MyModule" ==) . TH.nameModule
+--
+-- instance $(sayableSubConstraints $ do ofType ''Foo
+--                                       subElemFilter myModuleNames
+--          ) => Sayable saytag Foo where ...
+-- @
+--
+-- If not used, the default is equivalent to @subElemFilter (const True)@ which
+-- accepts all sub-element names.
+subElemFilter :: (Name -> Bool) -> ConstrM ()
+subElemFilter fltrf = ConstrM $ \c -> (c { cFilt = fltrf }, ())
+
+
+-- | This ConstrM operation is used to specify the variable name that should be
+-- used for the next sub-element parameter.  When sub-elements are parameterized
+-- (e.g. @Maybe a@) then this operation allows the identification of a primary
+-- instance variable to be used for the sub-element. All sub-elements must take
+-- parameters in the same order, although they don't need to accept all
+-- parameters.
+--
+-- @
+-- data Foo b a = Foo (Either a b)
+--
+-- instance $(sayableSubConstraints $ do ofType ''Foo
+--                                       paramVar "x"
+--                                       paramVar "y"
+--           ) => Sayable saytag (Foo y x) where ...
+-- @
+--
+-- generates: @(Sayable saytag (Either x y), Sayable saytag x, Sayable saytag y)@
+--
+-- As shown above, this operation can be used multiple times to specify multiple
+-- parameters.
+paramVar :: String -> ConstrM ()
+paramVar pname = ConstrM $ \c -> (c { cVars = cVars c <> [ Right pname ] }, ())
+
+
+-- | This ConstrM operation is used to specify a Symbol singleton value that
+-- should be used for the next sub-element parameter.  When sub-elements are
+-- parameterized (e.g. @Maybe a@) then this operation allows the identification
+-- of a Symbol to be used for the sub-element. All sub-elements must take
+-- parameters in the same order, although they don't need to accept all
+-- parameters.
+--
+-- @
+-- data Bar (s :: Symbol) = ...
+-- data Foo (s :: Symbol) = Foo { thing :: Bar s }
+--
+-- instance $(sayableSubConstraints $ do ofType ''Foo
+--                                       paramSym "arg"
+--           ) => Sayable saytag (Foo "arg") where ...
+-- @
+--
+-- generates: @Sayable saytag (Bar "arg")@
+--
+-- This operation can be used multiple times to specify multiple parameters.
+paramSym :: String -> ConstrM ()
+paramSym pname = let psym = Left $ TH.LitT $ TH.StrTyLit pname
+                 in ConstrM $ \c -> (c { cVars = cVars c <> [ psym ] }, ())
+
+
+-- | This ConstrM operation is used to specify a Nat singleton value that
+-- should be used for the next sub-element parameter.  When sub-elements are
+-- parameterized (e.g. @Maybe a@) then this operation allows the identification
+-- of a Nat to be used for the sub-element. All sub-elements must take
+-- parameters in the same order, although they don't need to accept all
+-- parameters.
+--
+-- @
+-- data Bar (s :: Symbol) (n :: Nat) = ...
+-- data Foo (n :: Nat) (s :: Symbol) = Foo { thing :: Bar s n }
+--
+-- instance $(sayableSubConstraints $ do ofType ''Foo
+--                                       paramSym "arg"
+--                                       paramNat 2
+--           ) => Sayable saytag (Foo 2 "arg") where ...
+-- @
+--
+-- generates: @Sayable saytag (Bar "arg" 2)@
+--
+-- This operation can be used multiple times to specify multiple parameters.
+paramNat :: Integer -> ConstrM ()
+paramNat pnum = let pnat = Left $ TH.LitT $ TH.NumTyLit pnum
+                 in ConstrM $ \c -> (c { cVars = cVars c <> [ pnat ] }, ())
+
+
+-- | This ConstrM operation is used to specify a template-haskell Type that
+-- should be used for the next sub-element parameter.  When sub-elements are
+-- parameterized (e.g. @Maybe a@) then this operation allows specification of a
+-- specific Type for that parameter.  The use of this operation is unusual and is
+-- expected only in cases where 'paramVar', 'paramSym', or 'paramNat' are
+-- insufficient.
+--
+-- @
+-- data Bar '(s :: Symbol, n :: Nat) = ...
+-- data Foo (n :: Nat) (s :: Symbol) = Foo { thing :: Bar '(s, n) }
+--
+-- instance $(sayableSubConstraints $ do ofType ''Foo
+--                                       paramTH (TH.App
+--                                                (TH.App (TH.TupleT 2)
+--                                                 (TH.LitT $ TH.StrTyLit "loud"))
+--                                                (TH.LitT $ TH.NumTyLit 3))
+--           ) => Sayable saytag (Foo 3 "loud") where ...
+-- @
+--
+-- generates: @Sayable saytag (Bar '("loud", 3))@
+--
+-- This operation can be used multiple times to specify multiple parameters.
+paramTH :: TH.Type -> ConstrM ()
+paramTH pty = ConstrM $ \c -> (c { cVars = cVars c <> [ Left pty ] }, ())
+
+
+data SCCtx = SCCtx { cTgt :: Name
+                   , cFilt :: Name -> Bool
+                   , cSaytag :: Either TH.Type String
+                   , cVars :: [Either TH.Type String]
+                   , cWrapper :: Maybe Type
+                   }
+
+
+sayableSubConstraints' :: (Name -> Bool)
+                       -> Name
+                       -> Either TH.Type String
+                       -> Maybe TH.Type
+                       -> [Either TH.Type String]
+                       -> PredQ
+sayableSubConstraints' fltr t tagName mbWrapper varBindings = do
+  v <- case tagName of
+         Left x -> return x
+         Right tn -> varT $ mkName tn
+
+  let vbs = let toTgt = \case
+                  Left ty -> ty
+                  Right nm -> VarT (mkName nm)
+        in fmap toTgt varBindings
+
+  rt <- reifyDatatype t
+  let cf' = concat (constructorFields <$> datatypeCons rt)
+  cf <- mapM resolveTypeSynonyms cf'
+
+  let tsubmap = Map.fromList $ zip (tvName <$> datatypeVars rt) vbs
+
+  let collectTC :: TH.Type -> Q [TH.Type]
+      collectTC = \case
+        -- String as a [Char] is a special case because String is the fundamental
+        -- Pretty printable type, so restore it after resolveTypeSynonyms.
+        AppT ListT (ConT a) | a == ''Char -> return [ConT ''String]
+        AppT ListT b -> collectTC b  -- assumes lists are handled via &*
+        x@(AppT (ConT a) b) -> if a == ''Maybe
+                               then collectTC b -- assumes Maybe is handled via &?
+                               else return $ if fltr a then [x] else []
+        (AppT a b) -> do y <- collectTC a
+                         z <- collectTC b
+                         return $ concat ((\x -> AppT x <$> z) <$> y)
+        x@(ConT a) -> return $ if fltr a then [x] else []
+        x@(VarT a) -> return $ if fltr a then [x] else []
+        _ -> return []
+  tc <- fmap (applySubstitution tsubmap) . concat <$> (mapM collectTC cf)
+
+
+  -- Make a tuple of constraints for all the sub-element types collected in tc.
+  -- Note that tc may contain duplicates, but it is fine to express duplicate
+  -- constraints, so don't bother trying to filter down to only unique target
+  -- types here.  However, the maximum tuple arity is 64, so create nested tuples
+  -- if necessary to stay under that limit.
+
+  let mkConstrTpl elem0 lst =
+        if null lst then elem0
+        else let (lst1, lst2) = splitAt 63 lst
+                 l1len = length lst1
+                 base = AppT (TupleT (l1len + 1)) elem0
+                 next tc' p' = AppT p' (classPred ''Sayable [v, tc'])
+             in mkConstrTpl (foldr next base lst1) lst2
+  let p = mkConstrTpl (TupleT 0) (maybe id AppT mbWrapper <$> tc)
+  let pv = mkConstrTpl p (VarT . mkName <$> rights varBindings)
+  return pv

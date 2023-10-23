@@ -45,9 +45,12 @@ library
     default-language: Haskell2010
     exposed-modules:  Text.Sayable
     build-depends:    base >= 4.13 && < 4.19
+                    , containers
                     , exceptions
                     , bytestring
                     , text
+                    , template-haskell
+                    , th-abstraction
                     , prettyprinter >= 1.7 && < 1.8
 
 test-suite sayableTests
@@ -56,6 +59,7 @@ test-suite sayableTests
     type:             exitcode-stdio-1.0
     hs-source-dirs:   test
     main-is:          Test.hs
+    other-modules:    Helpers
     build-depends:    base
                     , hspec
                     , prettyprinter
@@ -63,4 +67,5 @@ test-suite sayableTests
                     , tasty >= 1.4 && < 1.5
                     , tasty-ant-xml >= 1.1 && < 1.2
                     , tasty-hspec >= 1.2 && < 1.3
+                    , template-haskell
                     , text
