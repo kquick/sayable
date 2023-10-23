@@ -113,7 +113,7 @@ https://github.com:442/by/one
 Note that there are several pre-declared `Sayable` instances for common
 datatypes for convenience.
 
-== Operators
+## Operators
 
 In the logging lines above, there are several operators used, each of which
 starts with the `&` character.  These are described in detail in the 'Helper
