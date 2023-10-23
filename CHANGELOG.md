@@ -1,5 +1,10 @@
 # Revision history for sayable
 
+## 1.2.3.0 -- 2023-10-22
+
+* Added `sayableSubConstraints` for specifying data sub-element `Sayable`
+  constraints automatically via TemplateHaskell.
+
 ## 1.2.2.0 -- 2023-10-18
 
 * Added `sez_` helper, which is the same as `sez` but it uses an unlimited output
