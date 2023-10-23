@@ -70,7 +70,7 @@ As a developer, it is encouraged to use whatever saytag makes sense relative to
 the current context and type of information being processed.  Most of this
 documentation will use the preferred `Symbol` kind for the `saytag`.
 
-== Individual Arguments
+## Individual Arguments
 
 The arguments passed to the sayable should be instances of the `Sayable` class.
 There are a number of standard instances of `Sayable`, but an instance can be
