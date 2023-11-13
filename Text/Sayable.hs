@@ -1244,12 +1244,12 @@ sayableSubConstraints' fltr t tagName mbWrapper varBindings = do
   -- Make a tuple of constraints for all the sub-element types collected in tc.
   -- Note that tc may contain duplicates, but it is fine to express duplicate
   -- constraints, so don't bother trying to filter down to only unique target
-  -- types here.  However, the maximum tuple arity is 64, so create nested tuples
+  -- types here.  However, the maximum tuple arity is 62, so create nested tuples
   -- if necessary to stay under that limit.
 
   let mkConstrTpl elem0 lst =
         if null lst then elem0
-        else let (lst1, lst2) = splitAt 63 lst
+        else let (lst1, lst2) = splitAt 60 lst
                  l1len = length lst1
                  base = AppT (TupleT (l1len + 1)) elem0
                  next tc' p' = AppT p' (classPred ''Sayable [v, tc'])
