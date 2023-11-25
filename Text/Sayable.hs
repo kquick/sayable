@@ -1237,7 +1237,7 @@ sayableSubConstraints' fltr t tagName mbWrapper varBindings = do
                          return $ concat ((\x -> AppT x <$> z) <$> y)
         x@(ConT a) -> return $ if fltr a then [x] else []
         x@(VarT a) -> return $ if fltr a then [x] else []
-        _ -> return []
+        x -> return [x]
   tc <- fmap (applySubstitution tsubmap) . concat <$> (mapM collectTC cf)
 
 
