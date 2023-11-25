@@ -1225,13 +1225,26 @@ sayableSubConstraints' fltr t tagName mbWrapper varBindings = do
 
   let collectTC :: TH.Type -> Q [TH.Type]
       collectTC = \case
+
         -- String as a [Char] is a special case because String is the fundamental
         -- Pretty printable type, so restore it after resolveTypeSynonyms.
         AppT ListT (ConT a) | a == ''Char -> return [ConT ''String]
-        AppT ListT b -> collectTC b  -- assumes lists are handled via &*
+
+        -- Assumes that lists or list-like sequences are handled via &* and so
+        -- only a dependency on the element type and not the sequence type itself
+        -- is needed.
+        AppT ListT b -> collectTC b
+        AppT (ConT a) b | TH.nameBase a `elem` [ "NonEmpty"
+                                               , "Seq"
+                                               , "Set"
+                                               ] -> collectTC b
+
+        -- Assumes Maybe is handled via &? so only a dependency on the element
+        -- type and not on the Maybe itself.
         x@(AppT (ConT a) b) -> if a == ''Maybe
-                               then collectTC b -- assumes Maybe is handled via &?
+                               then collectTC b
                                else return $ if fltr a then [x] else []
+
         (AppT a b) -> do y <- collectTC a
                          z <- collectTC b
                          return $ concat ((\x -> AppT x <$> z) <$> y)
