@@ -39,7 +39,24 @@
     "root": {
       "inputs": {
         "levers": "levers",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "th-abstraction-src": "th-abstraction-src"
+      }
+    },
+    "th-abstraction-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1697111656,
+        "narHash": "sha256-pjfacqvFNg1V2oZSQPX/9LrFbbUUhgaTGzuCtUz2X+s=",
+        "owner": "glguy",
+        "repo": "th-abstraction",
+        "rev": "d1037691321198aa4437ce8ae6127f1aabfd5c2b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "glguy",
+        "repo": "th-abstraction",
+        "type": "github"
       }
     }
   },

@@ -8,10 +8,14 @@
     levers = {
       url = "github:kquick/nix-levers";
       inputs.nixpkgs.follows = "nixpkgs";
-      };
     };
+    th-abstraction-src = {
+      url = "github:glguy/th-abstraction";
+      flake = false;
+    };
+  };
 
-  outputs = { self, levers, nixpkgs }:
+  outputs = { self, levers, nixpkgs, th-abstraction-src }:
     let
       shellWith = pkgs: adds: drv: drv.overrideAttrs(old:
         { buildInputs = old.buildInputs ++ adds pkgs; });
@@ -62,17 +66,24 @@
           default = sayable;
           TESTS = wrap "Sayable-TESTS" [ sayable_tests ];
           DOC = wrap "Sayable-DOC" [ sayable_doc ];
+          th-abstraction = mkHaskell "th-abstraction" th-abstraction-src {
+            # Override build needed because nixos-23.11 version is older and does
+            # not support GHC 9.8.
+          };
           sayable = mkHaskell "sayable" self {
+            inherit th-abstraction;
             adjustDrv = args:
               drv:
                 haskellAdj drv;
             };
           sayable_tests = mkHaskell "sayable_tests" self {
+            inherit th-abstraction;
             adjustDrv = args:
               drv:
                 pkgs.haskell.lib.doBenchmark (pkgs.haskell.lib.doCheck (haskellAdj drv));
             };
           sayable_doc = mkHaskell "sayable_doc" self {
+            inherit th-abstraction;
             adjustDrv = args:
               drv:
               pkgs.haskell.lib.doHaddock
