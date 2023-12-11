@@ -9,13 +9,25 @@
       url = "github:kquick/nix-levers";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    generic-deriving-src = {
+      url = "https://hackage.haskell.org/package/generic-deriving-1.14.5/generic-deriving-1.14.5.tar.gz";
+      flake = false;
+    };
+    tasty-ant-xml-src = {
+      url = "https://hackage.haskell.org/package/tasty-ant-xml-1.1.9/tasty-ant-xml-1.1.9.tar.gz";
+      flake = false;
+    };
     th-abstraction-src = {
-      url = "github:glguy/th-abstraction";
+      url = "https://hackage.haskell.org/package/th-abstraction-0.6.0.0/th-abstraction-0.6.0.0.tar.gz";
       flake = false;
     };
   };
 
-  outputs = { self, levers, nixpkgs, th-abstraction-src }:
+  outputs = { self, levers, nixpkgs
+            , generic-deriving-src
+            , tasty-ant-xml-src
+            , th-abstraction-src
+            }:
     let
       shellWith = pkgs: adds: drv: drv.overrideAttrs(old:
         { buildInputs = old.buildInputs ++ adds pkgs; });
@@ -66,6 +78,15 @@
           default = sayable;
           TESTS = wrap "Sayable-TESTS" [ sayable_tests ];
           DOC = wrap "Sayable-DOC" [ sayable_doc ];
+          generic-deriving = mkHaskell "generic-deriving" generic-deriving-src {
+            # Override build because newer th-abstraction needed (see below).
+            inherit th-abstraction;
+          };
+          tasty-ant-xml = mkHaskell "tasty-ant-xml" tasty-ant-xml-src {
+            # Override build needed because this depends on generic-deriving,
+            # which depends on th-abstraction, which is overriden below.
+            inherit generic-deriving;
+          };
           th-abstraction = mkHaskell "th-abstraction" th-abstraction-src {
             # Override build needed because nixos-23.11 version is older and does
             # not support GHC 9.8.
@@ -77,7 +98,7 @@
                 haskellAdj drv;
             };
           sayable_tests = mkHaskell "sayable_tests" self {
-            inherit th-abstraction;
+            inherit tasty-ant-xml th-abstraction;
             adjustDrv = args:
               drv:
                 pkgs.haskell.lib.doBenchmark (pkgs.haskell.lib.doCheck (haskellAdj drv));
