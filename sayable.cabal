@@ -12,7 +12,7 @@ description:
    .
    * Brevity of syntax (using operators) designed to enhance conversion of
      arguments and readability of messages and conversion
-   
+
 license:            ISC
 license-file:       LICENSE
 author:             Kevin Quick
