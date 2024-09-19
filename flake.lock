@@ -19,11 +19,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1687557470,
-        "narHash": "sha256-T0TAGZPiI5cwWR2OMLVYW7aj3Aco7v8qIVF7JoEgO9Y=",
+        "lastModified": 1726675215,
+        "narHash": "sha256-a0c9fvSTXlwiqR75WdKfP15fX0Zh7HcnDNUqk+mZqg4=",
         "owner": "kquick",
         "repo": "nix-levers",
-        "rev": "0e31d80978a9fb6a96df0722aa298d008a57c53e",
+        "rev": "efa344dfd989fc9ca8c8be6b06c551bda37989dc",
         "type": "github"
       },
       "original": {
@@ -48,11 +48,27 @@
         "type": "github"
       }
     },
+    "nixpkgs_unstable": {
+      "locked": {
+        "lastModified": 1726616289,
+        "narHash": "sha256-GaBJ0Zqng+HiWNOC2tDOFkT28UmOma7Na55JsbHBJU8=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "c569434559b00b51286720526a8deed2b43154de",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "generic-deriving-src": "generic-deriving-src",
         "levers": "levers",
         "nixpkgs": "nixpkgs",
+        "nixpkgs_unstable": "nixpkgs_unstable",
         "tasty-ant-xml-src": "tasty-ant-xml-src",
         "th-abstraction-src": "th-abstraction-src"
       }

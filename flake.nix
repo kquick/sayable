@@ -1,9 +1,14 @@
 {
+  # Note: contains overrides for building with GHC 9.8 because the nixpkgs
+  # specifications for GHC 9.8 do not reference a compatible version of
+  # th-abstraction.
+
   description = "Flake to build the haskell-src package 'sayable' and dependencies";
 
   nixConfig.bash-prompt-suffix = "sayable.env} ";
 
   inputs = {
+    nixpkgs_unstable = { url = "github:nixos/nixpkgs"; };
     nixpkgs = { url = "github:nixos/nixpkgs/23.11"; };
     levers = {
       url = "github:kquick/nix-levers";
@@ -23,7 +28,7 @@
     };
   };
 
-  outputs = { self, levers, nixpkgs
+  outputs = { self, levers, nixpkgs, nixpkgs_unstable
             , generic-deriving-src
             , tasty-ant-xml-src
             , th-abstraction-src
@@ -64,20 +69,28 @@
 
       packages = levers.eachSystem (system:
         let
-          mkHaskell = levers.mkHaskellPkg {
-            inherit nixpkgs system;
-            ghcver = levers.validGHCVersions pkgs.haskell.compiler;
-            };
           pkgs = import nixpkgs { inherit system; };
+          nixpkgs_list = [ nixpkgs nixpkgs_unstable ]; # prefer pkgs from earlier entries
+          mkHaskell = name: src: ovrDrvOrArgs:
+            levers.mkHaskellPkgs { inherit system; }
+              nixpkgs_list name src ovrDrvOrArgs;
           wrap = levers.pkg_wrapper system pkgs;
           haskellAdj = drv:
+            # Used to make standard adjustments to a haskell package
             with (pkgs.haskell).lib;
             dontHaddock (dontCheck (dontBenchmark drv));
         in rec {
-          ghc = pkgs.haskell.compiler.ghc8107;
           default = sayable;
-          TESTS = wrap "Sayable-TESTS" [ sayable_tests ];
-          DOC = wrap "Sayable-DOC" [ sayable_doc ];
+          TESTS = wrap "Sayable-TESTS" [
+            sayable_tests
+            sayable_tests.ghc810  # min supported version
+            sayable_tests.ghc910  # max supported version
+          ];
+          DOC = wrap "Sayable-DOC" [
+            sayable_doc
+            sayable_doc.ghc810  # min supported version
+            sayable_doc.ghc910  # max supported version
+          ];
           generic-deriving = mkHaskell "generic-deriving" generic-deriving-src {
             # Override build because newer th-abstraction needed (see below).
             inherit th-abstraction;
@@ -92,23 +105,40 @@
             # not support GHC 9.8.
           };
           sayable = mkHaskell "sayable" self {
-            inherit th-abstraction;
             adjustDrv = args:
               drv:
-                haskellAdj drv;
+              if args.ghcver == "ghc98"
+              then haskellAdj
+                (drv.override
+                  {
+                    th-abstraction = builtins.getAttr args.ghcver th-abstraction;
+                  })
+              else haskellAdj drv;
             };
           sayable_tests = mkHaskell "sayable_tests" self {
-            inherit tasty-ant-xml th-abstraction;
             adjustDrv = args:
               drv:
-                pkgs.haskell.lib.doBenchmark (pkgs.haskell.lib.doCheck (haskellAdj drv));
+              let mod = d:
+                    with (pkgs.haskell).lib;
+                    doBenchmark (doCheck (haskellAdj d));
+              in if args.ghcver == "ghc98"
+                 then mod (drv.override
+                   {
+                     th-abstraction = builtins.getAttr args.ghcver th-abstraction;
+                     tasty-ant-xml = builtins.getAttr args.ghcver tasty-ant-xml;
+                   })
+                 else mod drv;
             };
           sayable_doc = mkHaskell "sayable_doc" self {
-            inherit th-abstraction;
             adjustDrv = args:
               drv:
-              pkgs.haskell.lib.doHaddock
-                (haskellAdj drv);
+              let mod = d: pkgs.haskell.lib.doHaddock (haskellAdj d);
+              in if args.ghcver == "ghc98"
+                 then mod (drv.override
+                   {
+                     th-abstraction = builtins.getAttr args.ghcver th-abstraction;
+                   })
+                 else mod drv;
             };
         });
     };
