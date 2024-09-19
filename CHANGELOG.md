@@ -1,5 +1,9 @@
 # Revision history for sayable
 
+## 1.2.5.0 -- 2023-12-11
+
+* Bump constraints to support GHC 9.8 and GHC 9.10.
+
 ## 1.2.4.0 -- 2023-11-25
 
 * Fix sayableSubConstraints filtering to only apply to outer constructor and
