@@ -247,8 +247,8 @@ LOUD: bar is {! "https://github.com/by/one" !} via {! "https://github.com/by/one
 
 === Sub-Element Constraints
 
-  There's another annoyance to address when using Sayable: t he need for explicit
-  contraints ofr data structure sub-elements.  To observe this new twist, add a
+  There's another annoyance to address when using Sayable: the need for explicit
+  contraints for data structure sub-elements.  To observe this new twist, add a
   @Baz@ datastructure and its generic 'Sayable' instance to the previous
   section's example:
 
