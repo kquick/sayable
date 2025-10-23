@@ -1,17 +1,5 @@
 {
   "nodes": {
-    "generic-deriving-src": {
-      "flake": false,
-      "locked": {
-        "narHash": "sha256-V2X8Q80FMpFqgxivqqmpEZ54HtIjbN2ZtaAcwuzpsE0=",
-        "type": "tarball",
-        "url": "https://hackage.haskell.org/package/generic-deriving-1.14.5/generic-deriving-1.14.5.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://hackage.haskell.org/package/generic-deriving-1.14.5/generic-deriving-1.14.5.tar.gz"
-      }
-    },
     "levers": {
       "inputs": {
         "nixpkgs": [
@@ -19,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1726675215,
-        "narHash": "sha256-a0c9fvSTXlwiqR75WdKfP15fX0Zh7HcnDNUqk+mZqg4=",
+        "lastModified": 1761249636,
+        "narHash": "sha256-kbOrqPrDjBHdrkQrI2dAVl4A20CzB57DzpjM94xV5is=",
         "owner": "kquick",
         "repo": "nix-levers",
-        "rev": "efa344dfd989fc9ca8c8be6b06c551bda37989dc",
+        "rev": "e4c9fa5b97f0cc23640b8acfad4a89a7ce76c9bf",
         "type": "github"
       },
       "original": {
@@ -48,13 +36,45 @@
         "type": "github"
       }
     },
-    "nixpkgs_unstable": {
+    "nixpkgs2009": {
       "locked": {
-        "lastModified": 1755535288,
-        "narHash": "sha256-SXMzgzrx5Hi9e4nGN7juEEbQP50bmpNaZXHW06WlYdo=",
+        "lastModified": 1603791972,
+        "narHash": "sha256-nj2SvACFH+NERpye1kudcuygCcvnsZYv26M2+wgM5vE=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "49eb7acd19f48be71fa696964f4743777d1506c3",
+        "rev": "cd63096d6d887d689543a0b97743d28995bc9bc3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "20.09",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs2505": {
+      "locked": {
+        "lastModified": 1748026580,
+        "narHash": "sha256-rWtXrcIzU5wm/C8F9LWvUfBGu5U5E7cFzPYT1pHIJaQ=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "11cb3517b3af6af300dd6c055aeda73c9bf52c48",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "25.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_unstable": {
+      "locked": {
+        "lastModified": 1761248467,
+        "narHash": "sha256-ruWGOCRdKLQa/Td6XS2kjeW6BWFSd/QZAW96qz/X8j4=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "7d68200a25c3ebbbc999c7ada39bf7014d3d6f10",
         "type": "github"
       },
       "original": {
@@ -65,36 +85,11 @@
     },
     "root": {
       "inputs": {
-        "generic-deriving-src": "generic-deriving-src",
         "levers": "levers",
         "nixpkgs": "nixpkgs",
-        "nixpkgs_unstable": "nixpkgs_unstable",
-        "tasty-ant-xml-src": "tasty-ant-xml-src",
-        "th-abstraction-src": "th-abstraction-src"
-      }
-    },
-    "tasty-ant-xml-src": {
-      "flake": false,
-      "locked": {
-        "narHash": "sha256-aB7B61XSAZ5V+uW+QBe/PKBmhdFfX3OoOjDE9jB7Mek=",
-        "type": "tarball",
-        "url": "https://hackage.haskell.org/package/tasty-ant-xml-1.1.9/tasty-ant-xml-1.1.9.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://hackage.haskell.org/package/tasty-ant-xml-1.1.9/tasty-ant-xml-1.1.9.tar.gz"
-      }
-    },
-    "th-abstraction-src": {
-      "flake": false,
-      "locked": {
-        "narHash": "sha256-eOUH1OSmLL8hS8mzijfJvGhxfMEU2vQozKHKlbv2B/A=",
-        "type": "tarball",
-        "url": "https://hackage.haskell.org/package/th-abstraction-0.6.0.0/th-abstraction-0.6.0.0.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://hackage.haskell.org/package/th-abstraction-0.6.0.0/th-abstraction-0.6.0.0.tar.gz"
+        "nixpkgs2009": "nixpkgs2009",
+        "nixpkgs2505": "nixpkgs2505",
+        "nixpkgs_unstable": "nixpkgs_unstable"
       }
     }
   },
