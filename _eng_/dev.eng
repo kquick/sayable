@@ -1,0 +1,13 @@
+dev
+ subcmd
+   build
+     Builds the sayable library
+       exec = cabal build sayable
+   test
+     testcase
+       sayableTests
+         type = EXE
+         runner = cabal_test
+     testrunner
+       cabal_test
+         exec = cabal test {TestName}
