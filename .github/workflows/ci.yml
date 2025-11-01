@@ -24,7 +24,7 @@ jobs:
         shell: bash
         run: nix build github:${{ github.repository }}/${{ github.sha }}#sayable.${{ matrix.ghc-version }}
   nixbuilds:
-    runs-on: ubuntu-latest
+    runs-on: alpine-latest
     steps:
       - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v21
