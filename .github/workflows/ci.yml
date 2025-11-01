@@ -24,7 +24,7 @@ jobs:
       - name: build ${{ matrix.ghc-version }}
         shell: bash
         run: nix build .#sayable.${{ matrix.ghc-version }}
-  eng:
+  nixbuilds:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -35,12 +35,6 @@ jobs:
         with:
           name: kquick
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-      - name: build
-        shell: bash
-        run: nix run github:galoisinc/eng dev build
-      - name: test
-        shell: bash
-        run: nix run github:galoisinc/eng dev test
       - name: nixbuild_all
         shell: bash
         run: nix run github:galoisinc/eng dev nixbuild_all
