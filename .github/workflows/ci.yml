@@ -24,9 +24,16 @@ jobs:
         shell: bash
         run: nix build github:${{ github.repository }}/${{ github.sha }}#sayable.${{ matrix.ghc-version }}
   nixbuilds:
-    runs-on: alpine-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: Lighten the load
+        uses: endersonmenezes/free-disk-space@v3
+        with:
+          remove_android: true
+          remove_dotnet: true
+          remove_folders: "/usr/share/swift /usr/share/miniconda /usr/share /usr/local/share"
+          rm_cmd: "rmz"  # faster
       - uses: cachix/install-nix-action@v21
         with:
           nix_path: nixpkgs=channel:nixos-23.11
