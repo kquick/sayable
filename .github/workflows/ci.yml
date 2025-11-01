@@ -13,25 +13,24 @@ jobs:
       matrix:
         ghc-version: [ "ghc912", "ghc910", "ghc98", "ghc96", "ghc94" ]
     steps:
-      - uses: actions/checkout@v3
-      - uses: cachix/install-nix-action@v20
+      - uses: cachix/install-nix-action@v31
         with:
           nix_path: nixpkgs=channel:nixos-23.11
-      - uses: cachix/cachix-action@v12
+      - uses: cachix/cachix-action@v16
         with:
           name: kquick
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
       - name: build ${{ matrix.ghc-version }}
         shell: bash
-        run: nix build .#sayable.${{ matrix.ghc-version }}
+        run: nix build github:${{ github.repository }}/${{ github.sha }}#sayable.${{ matrix.ghc-version }}
   nixbuilds:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: cachix/install-nix-action@v20
+      - uses: actions/checkout@v5
+      - uses: cachix/install-nix-action@v21
         with:
           nix_path: nixpkgs=channel:nixos-23.11
-      - uses: cachix/cachix-action@v12
+      - uses: cachix/cachix-action@v16
         with:
           name: kquick
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
