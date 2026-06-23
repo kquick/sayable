@@ -27,7 +27,9 @@
           mkHaskell = levers.mkHaskellPkg { inherit nixpkgs system; };
         in rec {
           default = sayable;
-          sayable = mkHaskell "sayable" self {};
+          sayable = mkHaskell "sayable" self {
+            adjustDrv = levers.haskellUnbounded pkgs ["ghc914"] ["tasty-hspec"];
+          };
         });
     };
 }
