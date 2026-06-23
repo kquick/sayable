@@ -1,5 +1,9 @@
 # Revision history for sayable
 
+## 1.2.7.0 -- 2026-06-22
+
+* Support for GHC 9.14.
+
 ## 1.2.6.0 -- 2025-08-18
 
 * Update constraints to support GHC 8.8 through 9.12.
