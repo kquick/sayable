@@ -15,7 +15,8 @@ dev
     flake_update =
       Update flake dependencies =
         in dir = {TopDir}
-        exec = nix flake update --option tarball-ttl 60
+        exec = nix run nixpkgs#cabal2nix . > nix/sayable.nix
+               nix flake update --option tarball-ttl 60
 
     nixbuild
       Uses nix to build with current GHC versions
