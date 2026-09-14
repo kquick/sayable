@@ -24,7 +24,9 @@
       packages = levers.eachSystem (system:
         let
           pkgs = import nixpkgs { inherit system; };
-          mkHaskell = levers.mkHaskellPkg { inherit nixpkgs system; };
+          mkHaskell = levers.mkHaskellPkg { inherit nixpkgs system;
+                                            nix-deriv-srcs = "${self}/nix";
+                                          };
         in rec {
           default = sayable;
           sayable = mkHaskell "sayable" self {
