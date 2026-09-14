@@ -18,7 +18,12 @@ dev
         exec = |
           set -e
           nix flake update --option tarball-ttl 60
-          nix run nixpkgs#cabal2nix . > nix/sayable.nix
+
+    update_nix_derivs =
+      Update local static nix derivations
+        in dir = {TopDir}/nix
+        exec = |
+          nix run nixpkgs#cabal2nix .. > sayable.nix
 
     nixbuild
       Uses nix to build with current GHC versions

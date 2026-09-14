@@ -5,7 +5,7 @@
 mkDerivation {
   pname = "sayable";
   version = "1.2.7.0";
-  src = ./.;
+  src = ./..;
   libraryHaskellDepends = [
     base bytestring containers exceptions prettyprinter
     template-haskell text th-abstraction
