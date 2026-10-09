@@ -12,18 +12,15 @@ dev
         cabal_test
           exec = cabal test {TestName}
 
-    flake_update =
-      Update flake dependencies =
+    update_deps =
+      Update all dependencies =
         in dir = {TopDir}
-        exec = |
-          set -e
-          nix flake update --option tarball-ttl 60
+        exec = nix run .#depmgr flake_update
 
-    update_nix_derivs =
-      Update local static nix derivations
+    build:nix-deriv
+      Builds local (cached) derivation
         in dir = {TopDir}/nix
-        exec = |
-          nix run nixpkgs#cabal2nix .. > sayable.nix
+        exec = nix run nixpkgs#cabal2nix .. > sayable.nix
 
     nixbuild
       Uses nix to build with current GHC versions
